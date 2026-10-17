@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ogMetadata } from "@/lib/og";
 import Link from "next/link";
 import { REPO_URL } from "@/lib/content";
 import { highlight } from "@/lib/highlight";
@@ -7,6 +8,7 @@ import { taste } from "@/lib/readme";
 export const metadata: Metadata = {
   title: "Playground",
   description: "Try wowlua in the browser. Coming once the compiler builds to WebAssembly.",
+  ...ogMetadata("/playground", "Playground", "Try wowlua in the browser. Coming once the compiler builds to WebAssembly."),
 };
 
 export default function PlaygroundPage() {

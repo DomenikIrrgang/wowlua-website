@@ -11,6 +11,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
 import { REPO_URL, latestRelease } from "@/lib/content";
 import { shortVersion } from "@/lib/format";
+import { ogMetadata } from "@/lib/og";
 
 const martian = localFont({
   src: [
@@ -40,11 +41,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   title: { default: "wowlua · typed Lua for World of Warcraft AddOns", template: "%s · wowlua" },
   description: "A language, compiler, framework and package manager for World of Warcraft AddOns.",
-  openGraph: { siteName: "wowlua", type: "website" },
+  // Pages set their own; this is the home page's card, used by anything without one.
+  ...ogMetadata("/", "wowlua · typed Lua for World of Warcraft AddOns", "A language, compiler, framework and package manager for World of Warcraft AddOns."),
 };
 
 export const viewport: Viewport = {
-  themeColor: "#131210",
+  // Also the colour of the stripe beside link previews in Discord.
+  themeColor: "#ffb547",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

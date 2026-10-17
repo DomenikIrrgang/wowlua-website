@@ -17,6 +17,7 @@ import {
 } from "@/lib/content";
 import { shortVersion } from "@/lib/format";
 import { renderRepoFile } from "@/lib/markdown";
+import { ogMetadata } from "@/lib/og";
 
 export const dynamicParams = false;
 
@@ -47,10 +48,12 @@ async function load(params: Promise<Params>) {
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
-  const { version, rendered } = await load(params);
+  const { version, page, rendered } = await load(params);
   const title = rendered.title ?? "docs";
+  const full = version === "main" ? title : `${title} (v${version})`;
   return {
-    title: version === "main" ? title : `${title} (v${version})`,
+    ...ogMetadata(docsHref(version, page.slug), full, rendered.description || undefined),
+    title: full,
     description: rendered.description || undefined,
     // Older versions point search engines at main.
     robots: version === "main" ? undefined : { index: false, follow: true },

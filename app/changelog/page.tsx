@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ogMetadata } from "@/lib/og";
 import Link from "next/link";
 import { ChangelogFilter } from "@/components/ChangelogFilter";
 import { changelog } from "@/lib/changelog";
@@ -10,6 +11,7 @@ import { milestones } from "@/lib/roadmap";
 export const metadata: Metadata = {
   title: "Changelog",
   description: "Every release of wowlua, newest first, and what is on main but not released yet.",
+  ...ogMetadata("/changelog", "Changelog", "Every release of wowlua, newest first, and what is on main but not released yet."),
 };
 
 const md = async (text: string) => (text ? (await renderMarkdown(text, { version: "main", repoPath: "CHANGELOG.md" })).html : "");

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ogMetadata } from "@/lib/og";
 import Link from "next/link";
 import { REPO_URL } from "@/lib/content";
 import { feedItems } from "@/lib/feed";
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
   title: "Blog",
   description: "What changed in each release of wowlua, and what testing it against real addons taught us.",
   alternates: { types: { "application/rss+xml": "/blog/rss.xml" } },
+  ...ogMetadata("/blog", "Blog", "What changed in each release of wowlua, and what testing it against real addons taught us."),
 };
 
 export default function BlogPage() {

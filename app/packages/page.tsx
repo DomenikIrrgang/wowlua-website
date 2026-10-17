@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ogMetadata } from "@/lib/og";
 import Link from "next/link";
 import { findPage } from "@/lib/content";
 import { highlight } from "@/lib/highlight";
@@ -7,6 +8,7 @@ import { milestones } from "@/lib/roadmap";
 export const metadata: Metadata = {
   title: "Packages",
   description: "wowlua libraries, Lua libraries and type declarations. The registry arrives with milestone M10.",
+  ...ogMetadata("/packages", "Packages", "wowlua libraries, Lua libraries and type declarations. The registry arrives with milestone M10."),
 };
 
 // Dependency sources wowlua resolves today (spec/toolchain/package-manager.md).

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ogMetadata } from "@/lib/og";
 import { githubUrl } from "@/lib/content";
 import { renderMarkdown } from "@/lib/markdown";
 import { milestones, type Status } from "@/lib/roadmap";
@@ -6,6 +7,7 @@ import { milestones, type Status } from "@/lib/roadmap";
 export const metadata: Metadata = {
   title: "Roadmap",
   description: "wowlua's milestones, their exit criteria and status, from the roadmap in the wowlua repository.",
+  ...ogMetadata("/roadmap", "Roadmap", "wowlua's milestones, their exit criteria and status, from the roadmap in the wowlua repository."),
 };
 
 const md = async (text: string) => (await renderMarkdown(text, { version: "main", repoPath: "spec/roadmap.md" })).html;

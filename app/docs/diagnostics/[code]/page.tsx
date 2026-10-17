@@ -6,6 +6,7 @@ import { Breadcrumb } from "@/components/docs/parts";
 import { githubUrl } from "@/lib/content";
 import { diagnostics, findDiagnostic, mentions } from "@/lib/diagnostics";
 import { inlineMd } from "@/lib/inline";
+import { ogMetadata } from "@/lib/og";
 
 export const dynamicParams = false;
 
@@ -18,7 +19,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const { code } = await params;
   const d = findDiagnostic("main", code);
-  return d ? { title: `${d.code}: ${d.summary.replace(/`/g, "")}`, description: `wowlua ${d.kind} ${d.code}: ${d.summary.replace(/`/g, "")}` } : {};
+  if (!d) return {};
+  const title = `${d.code}: ${d.summary.replace(/`/g, "")}`;
+  const description = `wowlua ${d.kind} ${d.code}: ${d.summary.replace(/`/g, "")}`;
+  return { title, description, ...ogMetadata(`/docs/diagnostics/${d.code}`, title, description) };
 }
 
 export default async function DiagnosticPage({ params }: { params: Promise<{ code: string }> }) {

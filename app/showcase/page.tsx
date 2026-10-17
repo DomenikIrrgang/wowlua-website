@@ -1,11 +1,13 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { Metadata } from "next";
+import { ogMetadata } from "@/lib/og";
 import { highlight } from "@/lib/highlight";
 
 export const metadata: Metadata = {
   title: "Showcase",
   description: "AddOns built with or moved to wowlua.",
+  ...ogMetadata("/showcase", "Showcase", "AddOns built with or moved to wowlua."),
 };
 
 type Entry = {

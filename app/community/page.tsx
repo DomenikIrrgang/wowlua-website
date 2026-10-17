@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ogMetadata } from "@/lib/og";
 import Link from "next/link";
 import { REPO_URL, githubUrl } from "@/lib/content";
 import { highlight } from "@/lib/highlight";
@@ -8,6 +9,7 @@ import { roadmapSummary } from "@/lib/roadmap";
 export const metadata: Metadata = {
   title: "Community",
   description: "wowlua is MIT-licensed and developed on GitHub: report bugs, follow the roadmap, contribute.",
+  ...ogMetadata("/community", "Community", "wowlua is MIT-licensed and developed on GitHub: report bugs, follow the roadmap, contribute."),
 };
 
 export default function CommunityPage() {

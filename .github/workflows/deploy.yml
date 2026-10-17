@@ -64,21 +64,23 @@ jobs:
             echo "image ${{ steps.v.outputs.tag }} exists; nothing changed"
           fi
 
-      # The registry is read-only while garbage collection runs.
+      # The registry is read-only while garbage collection runs. suuui-website's
+      # deploys start one; it waits for every registry login (up to 20 minutes) to expire.
       - name: Wait for registry garbage collection
         if: steps.skip.outputs.skip != 'true'
         run: |
-          for _ in $(seq 40); do
+          for _ in $(seq 120); do
             doctl registry garbage-collection get-active >/dev/null 2>&1 || exit 0
             echo "garbage collection in progress, waiting..."
             sleep 15
           done
-          echo "garbage collection still running after 10 minutes" >&2
+          echo "garbage collection still running after 30 minutes" >&2
           exit 1
 
       - name: Log in to registry
         if: steps.skip.outputs.skip != 'true'
-        run: doctl registry login --expiry-seconds 1200
+        # Short-lived: garbage collection waits for every write login to expire.
+        run: doctl registry login --expiry-seconds 600
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         if: steps.skip.outputs.skip != 'true'
@@ -117,6 +119,8 @@ jobs:
         if: always()
         run: rm -f ~/.ssh/deploy_key
 
+      # Only the tags: the registry (shared with suuui-website, 5 GB) is garbage
+      # collected by suuui-website's deploys, which free these images too.
       - name: Prune old images
         if: steps.skip.outputs.skip != 'true'
         run: |
@@ -125,5 +129,4 @@ jobs:
             > old-tags
           if [ -s old-tags ]; then
             xargs doctl registry repository delete-tag "$REPOSITORY" --force < old-tags
-            doctl registry garbage-collection start --include-untagged-manifests --force
           fi

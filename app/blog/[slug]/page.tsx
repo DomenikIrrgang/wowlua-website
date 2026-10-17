@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumb, Toc } from "@/components/docs/parts";
 import { blogPosts, findPost } from "@/lib/blog";
 import { renderMarkdown } from "@/lib/markdown";
+import { ogMetadata } from "@/lib/og";
 
 export const dynamicParams = false;
 
@@ -13,7 +14,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const p = findPost((await params).slug);
-  return p ? { title: p.title, description: p.summary } : {};
+  return p ? { title: p.title, description: p.summary, ...ogMetadata(`/blog/${p.slug}`, p.title, p.summary) } : {};
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
