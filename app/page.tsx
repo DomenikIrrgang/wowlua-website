@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DevWindowMock } from "@/components/landing/DevWindowMock";
 import { InstallTabs } from "@/components/landing/InstallTabs";
+import { JsonLd, SITE } from "@/components/JsonLd";
 import { REPO_URL, findPage, latestRelease } from "@/lib/content";
 import { shortVersion } from "@/lib/format";
 import { highlight } from "@/lib/highlight";
@@ -162,6 +163,25 @@ export default function Home() {
 
   return (
     <main id="main">
+      <JsonLd
+        data={[
+          { "@context": "https://schema.org", "@type": "WebSite", name: "wowlua", url: SITE },
+          {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "wowlua",
+            description: intro().replace(/\*\*/g, ""),
+            url: SITE,
+            applicationCategory: "DeveloperApplication",
+            operatingSystem: "macOS, Linux, Windows",
+            ...(latest ? { softwareVersion: latest.tag.replace(/^v/, ""), releaseNotes: `${SITE}/changelog` } : {}),
+            downloadUrl: `${REPO_URL()}/releases/latest`,
+            license: "https://opensource.org/licenses/MIT",
+            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+            sameAs: [REPO_URL()],
+          },
+        ]}
+      />
       <section className="landing-section" style={{ paddingTop: 88, gap: 28 }} aria-labelledby="hero">
         <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-muted)" }}>
           {latest && <span style={{ color: "var(--amber-ink)", fontWeight: 600 }}>v{shortVersion(latest.tag)}</span>}

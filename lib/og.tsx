@@ -20,12 +20,13 @@ export type Card = {
 /** URL of a page's card: "/" → "/og/image.png", "/docs/x" → "/og/docs/x/image.png". */
 export const ogImagePath = (pagePath: string) => `/og${pagePath === "/" ? "" : pagePath}/image.png`;
 
-/** Open Graph and Twitter metadata for a page, with its card. */
+/** Canonical URL, Open Graph and Twitter metadata for a page, with its card. */
 export function ogMetadata(pagePath: string, pageTitle: string, description?: string): Metadata {
   // Chat apps show og:title alone, so it names the site.
   const title = /wowlua/i.test(pageTitle) ? pageTitle : `${pageTitle} · wowlua`;
   const image = { url: ogImagePath(pagePath), width: OG_SIZE.width, height: OG_SIZE.height, alt: title };
   return {
+    alternates: { canonical: pagePath },
     openGraph: { title, description, url: pagePath, siteName: "wowlua", type: "website", images: [image] },
     twitter: { card: "summary_large_image", title, description, images: [image.url] },
   };

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { Breadcrumb } from "@/components/docs/parts";
+import { JsonLd, breadcrumbs } from "@/components/JsonLd";
 import { githubUrl } from "@/lib/content";
 import { diagnostics, findDiagnostic, mentions } from "@/lib/diagnostics";
 import { inlineMd } from "@/lib/inline";
@@ -39,6 +40,13 @@ export default async function DiagnosticPage({ params }: { params: Promise<{ cod
 
   return (
     <div className="docs">
+      <JsonLd
+        data={breadcrumbs([
+          { name: "docs", path: "/docs" },
+          { name: "diagnostics", path: "/docs/spec/appendix/diagnostics" },
+          { name: d.code, path: `/docs/diagnostics/${d.code}` },
+        ])}
+      />
       <aside className="docs__side">
         <DocsSidebar version="main" current={APPENDIX} />
       </aside>

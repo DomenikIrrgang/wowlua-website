@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { Banner, Breadcrumb, PageNav, Toc } from "@/components/docs/parts";
+import { JsonLd, SITE, breadcrumbs } from "@/components/JsonLd";
 import {
   docsHref,
   findPage,
@@ -47,9 +48,12 @@ async function load(params: Promise<Params>) {
   return { version, page, rendered };
 }
 
+/** "12. CLI" → "CLI", "Appendix B. Diagnostics" → "Diagnostics" (the page's h1 keeps the number). */
+const searchTitle = (title: string) => title.replace(/^(Appendix [A-Z]\.|[\d.]+)\s+/, "");
+
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { version, page, rendered } = await load(params);
-  const title = rendered.title ?? "docs";
+  const title = searchTitle(rendered.title ?? "docs");
   const full = version === "main" ? title : `${title} (v${version})`;
   return {
     ...ogMetadata(docsHref(version, page.slug), full, rendered.description || undefined),
@@ -67,9 +71,31 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
   const latest = latestRelease();
   const latestId = latest ? shortVersion(latest.tag) : null;
   const ref = refOf(version);
+  const path = docsHref(version, page.slug);
+  const crumbs = [
+    { name: "docs", path: docsHref(version, []) },
+    ...(section && section.items[0].href !== path ? [{ name: section.title, path: section.items[0].href }] : []),
+    { name: searchTitle(rendered.title ?? "docs"), path },
+  ];
 
   return (
     <div className="docs">
+      <JsonLd
+        data={[
+          breadcrumbs(crumbs),
+          {
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            headline: searchTitle(rendered.title ?? "docs"),
+            description: rendered.description || undefined,
+            url: `${SITE}${path}`,
+            dateModified: ref.date,
+            inLanguage: "en",
+            isPartOf: { "@type": "WebSite", name: "wowlua", url: SITE },
+            about: { "@type": "SoftwareApplication", name: "wowlua" },
+          },
+        ]}
+      />
       <aside className="docs__side">
         <DocsSidebar version={version} current={page.repoPath} />
       </aside>

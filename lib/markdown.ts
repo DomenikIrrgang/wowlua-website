@@ -44,8 +44,11 @@ function rehypeDesign(ctx: Ctx, out: { title: string | null; description: string
       out.title = toString(tree.children[h1] as Element).trim();
       tree.children.splice(h1, 1);
     }
-    const firstP = tree.children.find((n): n is Element => n.type === "element" && n.tagName === "p");
-    if (firstP) out.description = toString(firstP).replace(/\s+/g, " ").trim().slice(0, 240);
+    const paras = tree.children
+      .filter((n): n is Element => n.type === "element" && n.tagName === "p")
+      .map((p) => toString(p).replace(/\s+/g, " ").trim())
+      .filter((t) => t.length >= 40 && !/^(Status|Last updated):/i.test(t));
+    if (paras[0]) out.description = summarize(paras[0]);
 
     visit(tree, "element", (node, index, parent) => {
       const p = node.properties;
@@ -120,6 +123,14 @@ function rehypeDesign(ctx: Ctx, out: { title: string | null; description: string
       }
     });
   };
+}
+
+/** At most ~160 characters, ending at a sentence or word boundary. */
+function summarize(text: string): string {
+  if (text.length <= 160) return text;
+  const cut = text.slice(0, 160);
+  const sentence = cut.lastIndexOf(". ");
+  return sentence > 80 ? cut.slice(0, sentence + 1) : `${cut.replace(/\s+\S*$/, "")}…`;
 }
 
 function stripMarker(node: Element) {

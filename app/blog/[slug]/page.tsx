@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumb, Toc } from "@/components/docs/parts";
+import { JsonLd, SITE } from "@/components/JsonLd";
 import { blogPosts, findPost } from "@/lib/blog";
 import { renderMarkdown } from "@/lib/markdown";
 import { ogMetadata } from "@/lib/og";
@@ -30,6 +31,19 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   return (
     <div className="docs">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: post.title,
+          description: post.summary,
+          datePublished: post.date,
+          url: `${SITE}/blog/${post.slug}`,
+          image: `${SITE}/og/blog/${post.slug}/image.png`,
+          ...(post.author ? { author: { "@type": "Person", name: post.author, url: `https://github.com/${post.author}` } } : {}),
+          publisher: { "@type": "Organization", name: "wowlua", url: SITE },
+        }}
+      />
       <main className="docs__main" id="main" style={{ maxWidth: 1000, margin: "0 auto" }}>
         <Breadcrumb items={[{ label: "blog", href: "/blog" }, { label: post.title.toLowerCase() }]} />
         <header className="docs__head">
