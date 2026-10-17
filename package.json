@@ -1,0 +1,39 @@
+{
+  "name": "wowlua-website",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "content": "node scripts/fetch-content.mjs",
+    "predev": "node scripts/fetch-content.mjs --if-missing",
+    "dev": "next dev",
+    "prebuild": "node scripts/fetch-content.mjs",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "github-slugger": "2.0.0",
+    "hast-util-to-string": "3.0.1",
+    "next": "16.4.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "rehype-slug": "6.0.0",
+    "rehype-stringify": "10.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "remark-rehype": "11.1.2",
+    "unified": "11.0.5",
+    "unist-util-visit": "5.1.0"
+  },
+  "devDependencies": {
+    "@types/hast": "3.0.4",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tar": "7.5.22",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

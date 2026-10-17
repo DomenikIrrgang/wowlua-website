@@ -1,0 +1,129 @@
+name: Deploy
+
+# The site renders wowlua's docs as they are on GitHub at build time, so it is
+# rebuilt when this repository changes and when wowlua does:
+#   - push to main here
+#   - repository_dispatch "wowlua-updated", sent by wowlua's CI (optional)
+#   - an hourly schedule (skips the build when neither repository changed)
+#   - by hand (workflow_dispatch)
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [wowlua-updated]
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: registry.digitalocean.com/suuui
+  REPOSITORY: wowlua-website
+  SITE_URL: https://wowlua.dev
+  KEEP_TAGS: 3
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Secrets live on the environment, which only accepts the main branch.
+    environment:
+      name: production
+      url: https://wowlua.dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # One image per site commit and wowlua commit: an unchanged pair is not rebuilt.
+      - name: Resolve versions
+        id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          wowlua_sha="$(gh api repos/DomenikIrrgang/wowlua/commits/main --jq .sha)"
+          latest="$(gh api repos/DomenikIrrgang/wowlua/releases/latest --jq .tag_name || true)"
+          tag="${GITHUB_SHA::12}-${wowlua_sha::12}-${latest:-none}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "image tag: $tag"
+
+      - uses: digitalocean/action-doctl@3cb3953159719656269e044e0e24ca16dd2a690f # v2.5.2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Skip when this exact build is deployed
+        id: skip
+        run: |
+          if doctl registry repository list-tags "$REPOSITORY" --format Tag --no-header 2>/dev/null | grep -qx "${{ steps.v.outputs.tag }}"; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "image ${{ steps.v.outputs.tag }} exists; nothing changed"
+          fi
+
+      # The registry is read-only while garbage collection runs.
+      - name: Wait for registry garbage collection
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          for _ in $(seq 40); do
+            doctl registry garbage-collection get-active >/dev/null 2>&1 || exit 0
+            echo "garbage collection in progress, waiting..."
+            sleep 15
+          done
+          echo "garbage collection still running after 10 minutes" >&2
+          exit 1
+
+      - name: Log in to registry
+        if: steps.skip.outputs.skip != 'true'
+        run: doctl registry login --expiry-seconds 1200
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        if: steps.skip.outputs.skip != 'true'
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        if: steps.skip.outputs.skip != 'true'
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ steps.v.outputs.tag }}
+          build-args: SITE_URL=${{ env.SITE_URL }}
+          # Only raises the GitHub API rate limit for the content fetch; never stored in the image.
+          secrets: github_token=${{ github.token }}
+          # A single plain manifest per tag keeps registry garbage collection
+          # from treating attestation manifests as untagged.
+          provenance: false
+          sbom: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to droplet
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          (umask 077 && printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key)
+          # The key's forced command runs wowlua-deploy with this argument.
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "deploy@$DEPLOY_HOST" "${{ steps.v.outputs.tag }}"
+
+      - name: Remove deploy key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+      - name: Prune old images
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          doctl registry repository list-tags "$REPOSITORY" --output json \
+            | jq -r --argjson keep "$KEEP_TAGS" 'sort_by(.updated_at) | reverse | .[$keep:] | .[].tag' \
+            > old-tags
+          if [ -s old-tags ]; then
+            xargs doctl registry repository delete-tag "$REPOSITORY" --force < old-tags
+            doctl registry garbage-collection start --include-untagged-manifests --force
+          fi

@@ -1,0 +1,28 @@
+# wowlua.dev on the `suuui` droplet, installed at /opt/wowlua. Traefik runs in
+# the suuui stack (/opt/suuui) and reaches this app over its `suuui_web`
+# network as `wowlua-app`. IMAGE_TAG is written to /opt/wowlua/.env by
+# wowlua-deploy (see deploy.sh).
+name: wowlua
+
+services:
+  # Not "app": service names are DNS aliases on the shared network, and the
+  # suuui stack's Traefik routes suuui.dev to "app".
+  wowlua-app:
+    image: registry.digitalocean.com/suuui/wowlua-website:${IMAGE_TAG:?IMAGE_TAG is not set}
+    restart: unless-stopped
+    environment:
+      SITE_URL: https://wowlua.dev
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks: [web]
+
+networks:
+  web:
+    name: suuui_web
+    external: true

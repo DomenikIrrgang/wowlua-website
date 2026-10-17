@@ -1,0 +1,12 @@
+{
+  "name": "SuuUI",
+  "description": "A full interface replacement for WoW Forever. Adopted with wowlua init; CI publishes every tag with wowlua publish.",
+  "kind": "addon",
+  "flavors": ["camelot"],
+  "links": {
+    "website": "https://suuui.dev",
+    "source": "https://github.com/DomenikIrrgang/suuui",
+    "curseforge": "https://www.curseforge.com/wow/addons/suuui",
+    "wago": "https://addons.wago.io/addons/suuui"
+  }
+}

@@ -34,3 +34,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# wowlua content fetched at build time (scripts/fetch-content.mjs)
+/content/.cache/

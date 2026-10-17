@@ -1,0 +1,7 @@
+.git
+.next
+node_modules
+content/.cache
+content/.cache.next
+*.tsbuildinfo
+.env*
