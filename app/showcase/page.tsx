@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ogMetadata } from "@/lib/og";
 import { highlight } from "@/lib/highlight";
 
@@ -102,6 +103,9 @@ export default function ShowcasePage() {
               Open a pull request titled <code className="wl-icode">showcase: &lt;name&gt;</code>.
             </li>
           </ol>
+          <p style={{ margin: 0, color: "var(--ink-muted)" }}>
+            And show it on your own pages with the <Link href="/badge">built with wowlua badge</Link>.
+          </p>
         </div>
         <figure className="wl-code" style={{ margin: 0 }}>
           <div className="wl-code__bar">

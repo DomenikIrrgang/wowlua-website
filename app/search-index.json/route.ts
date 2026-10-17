@@ -30,6 +30,7 @@ export async function GET() {
     ["playground", "/playground"],
     ["packages", "/packages"],
     ["showcase", "/showcase"],
+    ["badge", "/badge"],
     ["community", "/community"],
     ["docs", docsHref("main", [])],
   ]) {

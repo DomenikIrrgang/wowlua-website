@@ -27,6 +27,7 @@ export function SiteFooter() {
     { label: "roadmap", href: "/roadmap" },
     { label: "changelog", href: "/changelog" },
     { label: "showcase", href: "/showcase" },
+    { label: "badge", href: "/badge" },
   ];
   const col = (title: string, links: L[]) => (
     <nav className="wl-site-footer__col" aria-label={title}>

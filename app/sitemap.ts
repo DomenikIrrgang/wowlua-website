@@ -18,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: url("/roadmap"), lastModified: main, changeFrequency: "weekly", priority: 0.6 },
     { url: url("/blog"), changeFrequency: "weekly", priority: 0.5 },
     { url: url("/showcase"), changeFrequency: "monthly", priority: 0.4 },
+    { url: url("/badge"), changeFrequency: "yearly", priority: 0.3 },
     { url: url("/community"), changeFrequency: "monthly", priority: 0.4 },
     { url: url("/packages"), changeFrequency: "monthly", priority: 0.3 },
     { url: url("/playground"), changeFrequency: "monthly", priority: 0.3 },

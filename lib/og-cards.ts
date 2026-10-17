@@ -43,6 +43,7 @@ const STATIC: Record<string, () => Card> = {
   },
   "/blog": () => ({ eyebrow: "blog", title: "Release notes and field reports", subtitle: "What changed in each release, and what testing wowlua against real addons taught us." }),
   "/showcase": () => ({ eyebrow: "showcase", title: "AddOns built with wowlua" }),
+  "/badge": () => ({ eyebrow: "badge", title: "Built with wowlua", subtitle: "A badge for your addon's website, README, CurseForge or WoWInterface page." }),
   "/community": () => ({ eyebrow: "community", title: "Built in the open", subtitle: "MIT-licensed and developed on GitHub." }),
   "/packages": () => ({ eyebrow: "packages", title: "Libraries, Lua libraries and type declarations" }),
   "/playground": () => ({ eyebrow: "playground", title: "wowlua in the browser", subtitle: "Coming once the compiler builds to WebAssembly." }),

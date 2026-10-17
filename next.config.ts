@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the container image (see Dockerfile).
   output: "standalone",
   poweredByHeader: false,
+  headers() {
+    return [
+      // Embedded on other sites: let browsers and CDNs keep them for a day.
+      { source: "/badge/:file*", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] },
+    ];
+  },
   redirects() {
     return [
       { source: "/stdlib", destination: "/docs/spec/stdlib", permanent: false },
