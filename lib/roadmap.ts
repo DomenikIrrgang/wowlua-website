@@ -58,15 +58,18 @@ export const milestones = cache((): Milestone[] => {
     const exit = exitIdx >= 0 ? paras[exitIdx].replace(/^\*\*Exit:\*\*\s*/, "").trim() : null;
     const rest = [...before.filter(isStatus), ...(exitIdx >= 0 ? paras.slice(exitIdx + 1) : [])].join("\n\n");
 
-    // Stages: "- S1 **VM core**: …" bullets with their continuation lines.
+    // Stages: "- S1 **VM core**: …" bullets with their continuation lines, up to a blank line (the last one is
+    // followed by the exit criterion). A stage may have no title of its own ("- S7 Persistent incremental cache…"):
+    // then its first sentence is the title.
     const stages: Stage[] = [];
     for (const item of body.split(/\n(?=- )/)) {
-      const s = /^- (S\d+)\s+(?:\*\*(.+?)\*\*:?|([^:]+):)\s*([\s\S]*)$/.exec(item);
+      const s = /^- (S\d+)\s+([\s\S]*)$/.exec(item.split(/\n\s*\n/)[0]);
       if (!s) continue;
-      const { status, note } = stageStatus(s[4]);
-      const title = (s[2] ?? s[3]).replace(/`/g, "");
-      const summary = s[4].split(/\n\s*(?:Done|Built|done)\b/)[0].replace(/\s*\n\s*/g, " ").trim();
-      stages.push({ id: s[1], title: `${title}${summary ? `: ${summary}` : ""}`, status, note });
+      const named = /^\*\*(.+?)\*\*:?\s*([\s\S]*)$/.exec(s[2]) ?? /^([^:.`\n]{1,40}):\s*([\s\S]*)$/.exec(s[2]);
+      const { status, note } = stageStatus(s[2]);
+      const summary = (named ? named[2] : s[2]).split(/\n\s*(?:Done|Built|done)\b/)[0].replace(/\s*\n\s*/g, " ").trim();
+      const title = named ? `${named[1].replace(/`/g, "")}${summary ? `: ${summary}` : ""}` : summary.replace(/`/g, "");
+      stages.push({ id: s[1], title, status, note });
     }
 
     let status: Status = "planned";
