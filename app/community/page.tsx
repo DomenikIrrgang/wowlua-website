@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { ogMetadata } from "@/lib/og";
 import Link from "next/link";
-import { REPO_URL, githubUrl } from "@/lib/content";
+import { DISCORD_URL, REPO_URL, githubUrl } from "@/lib/content";
 import { highlight } from "@/lib/highlight";
 import { developing } from "@/lib/readme";
 import { roadmapSummary } from "@/lib/roadmap";
 
 export const metadata: Metadata = {
   title: "Community",
-  description: "wowlua is MIT-licensed and developed on GitHub: report bugs, follow the roadmap, contribute.",
-  ...ogMetadata("/community", "Community", "wowlua is MIT-licensed and developed on GitHub: report bugs, follow the roadmap, contribute."),
+  description: "wowlua is MIT-licensed and developed on GitHub: report bugs, follow the roadmap, contribute, ask on Discord.",
+  ...ogMetadata("/community", "Community", "wowlua is MIT-licensed and developed on GitHub: report bugs, follow the roadmap, contribute, ask on Discord."),
 };
 
 export default function CommunityPage() {
@@ -21,7 +21,7 @@ export default function CommunityPage() {
           [ community ]
         </span>
         <h1 className="display-l">Built in the open</h1>
-        <p>wowlua is MIT-licensed and developed on GitHub. Report bugs as issues and send pull requests.</p>
+        <p>wowlua is MIT-licensed and developed on GitHub. Report bugs as issues and send pull requests. Ask questions and show what you build on Discord.</p>
       </div>
 
       <div className="community-grid">
@@ -36,6 +36,17 @@ export default function CommunityPage() {
             <a href={REPO_URL()}>{REPO_URL().replace("https://github.com/", "")} ↗</a>
             <a href={`${REPO_URL()}/issues`}>issues ↗</a>
             <a href={`${REPO_URL()}/releases`}>releases ↗</a>
+          </div>
+        </section>
+        <section className="landing-card">
+          <h2 className="heading-2" style={{ margin: 0 }}>
+            Discord
+          </h2>
+          <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }}>
+            Questions in <code className="wl-icode">#help</code>, AddOns built with wowlua in <code className="wl-icode">#showcase</code>, and every release as it ships.
+          </p>
+          <div className="showcase__links caption">
+            <a href={DISCORD_URL}>{DISCORD_URL.replace("https://", "")} ↗</a>
           </div>
         </section>
         <section className="landing-card">

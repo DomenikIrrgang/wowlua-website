@@ -116,6 +116,7 @@
 .showcase__links { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .showcase__submit, .community-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; align-items: start; padding-top: 32px; border-top: 1px solid var(--line); }
 .community-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+.community-grid .landing-card { flex-basis: 320px; } /* three cards side by side on a wide page */
 
 /* Badge page */
 .badge-variant { display: grid; gap: 12px; padding-top: 24px; border-top: 1px solid var(--line); }

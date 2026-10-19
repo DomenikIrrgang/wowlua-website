@@ -31,6 +31,8 @@ export const releases = cache((): Release[] => readJson<Release[]>("releases.jso
 export const unreleased = cache((): Unreleased => readJson<Unreleased>("unreleased.json"));
 
 export const REPO_URL = () => `https://github.com/${meta().repo}`;
+/** The wowlua Discord server's permanent invite (made by github.com/DomenikIrrgang/wowlua-bot). */
+export const DISCORD_URL = "https://discord.gg/Dn795czPYk";
 
 /** Docs versions: "main" first, then one per minor line, newest first. */
 export const versions = (): Ref[] => meta().refs;
