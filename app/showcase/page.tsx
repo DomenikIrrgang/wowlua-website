@@ -3,6 +3,7 @@ import path from "node:path";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ogMetadata } from "@/lib/og";
+import { ShowcaseList, type ShowcaseEntry as Entry } from "@/components/news/ShowcaseList";
 import { highlight } from "@/lib/highlight";
 
 export const metadata: Metadata = {
@@ -11,13 +12,6 @@ export const metadata: Metadata = {
   ...ogMetadata("/showcase", "Showcase", "AddOns built with or moved to wowlua."),
 };
 
-type Entry = {
-  name: string;
-  description: string;
-  kind: "addon" | "library" | "addon suite";
-  flavors: string[];
-  links: Partial<Record<"website" | "source" | "curseforge" | "wago", string>>;
-};
 
 const DIR = path.join(process.cwd(), "content", "showcase");
 
@@ -42,10 +36,22 @@ const TEMPLATE = `{
 
 const SITE_REPO = "https://github.com/DomenikIrrgang/wowlua-website";
 
+const template = (
+  <figure className="wl-code" style={{ margin: 0 }}>
+    <div className="wl-code__bar">
+      <span className="wl-code__file">content/showcase/myaddon.json</span>
+      <span className="wl-code__lang">json</span>
+    </div>
+    <pre className="wl-code__pre">
+      <code dangerouslySetInnerHTML={{ __html: highlight(TEMPLATE, "json") }} />
+    </pre>
+  </figure>
+);
+
 export default function ShowcasePage() {
   const list = entries();
   return (
-    <main className="page" id="main" style={{ maxWidth: "var(--size-page)" }}>
+    <main className="page showcase-page" id="main" style={{ maxWidth: "var(--size-page)" }}>
       <div className="page__head">
         <span className="label" style={{ color: "var(--amber-ink)" }}>
           [ showcase ]
@@ -53,36 +59,11 @@ export default function ShowcasePage() {
         <h1 className="display-l">AddOns built with or moved to wowlua</h1>
         <p>Projects whose authors added them to this page. Every entry is a file in the website&apos;s repository.</p>
       </div>
+      <a className="wl-btn wl-btn--secondary showcase__to-submit" href="#submit">
+        submit your addon
+      </a>
 
-      <ul className="showcase">
-        {list.map((e) => (
-          <li key={e.name} className="showcase__item">
-            <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-              <h2 className="heading-2" style={{ margin: 0 }}>
-                {e.name}
-              </h2>
-              <span className="wl-badge">{e.kind}</span>
-            </div>
-            <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }}>
-              {e.description}
-            </p>
-            <div className="wl-badge-row">
-              {e.flavors.map((f) => (
-                <span key={f} className="wl-badge wl-badge--release">
-                  {f}
-                </span>
-              ))}
-            </div>
-            <div className="showcase__links caption">
-              {Object.entries(e.links).map(([k, u]) => (
-                <a key={k} href={u}>
-                  {k} ↗
-                </a>
-              ))}
-            </div>
-          </li>
-        ))}
-      </ul>
+      <ShowcaseList entries={list} />
 
       <section className="showcase__submit" aria-labelledby="submit">
         <div style={{ display: "grid", gap: 12, alignContent: "start" }}>
@@ -92,7 +73,7 @@ export default function ShowcasePage() {
           <p style={{ margin: 0, color: "var(--ink-muted)" }}>
             Add one file to the website&apos;s repository and open a pull request. Your entry shows up with the next site build.
           </p>
-          <ol className="md" style={{ margin: 0 }}>
+          <ol className="md showcase__steps" style={{ margin: 0 }}>
             <li>
               Fork <a href={SITE_REPO}>DomenikIrrgang/wowlua-website ↗</a>.
             </li>
@@ -103,19 +84,33 @@ export default function ShowcasePage() {
               Open a pull request titled <code className="wl-icode">showcase: &lt;name&gt;</code>.
             </li>
           </ol>
+          {/* Phones: numbered steps with the format between them. */}
+          <ol className="showcase__steps-phone">
+            <li>
+              <span className="label">01</span>
+              <span>
+                Fork <a href={SITE_REPO}>DomenikIrrgang/wowlua-website ↗</a>.
+              </span>
+            </li>
+            <li>
+              <span className="label">02</span>
+              <span>
+                Add <code className="wl-icode">content/showcase/&lt;name&gt;.json</code> in this format:
+              </span>
+            </li>
+            <li className="showcase__steps-code">{template}</li>
+            <li>
+              <span className="label">03</span>
+              <span>
+                Open a pull request titled <code className="wl-icode">showcase: &lt;name&gt;</code>.
+              </span>
+            </li>
+          </ol>
           <p style={{ margin: 0, color: "var(--ink-muted)" }}>
             And show it on your own pages with the <Link href="/badge">built with wowlua badge</Link>.
           </p>
         </div>
-        <figure className="wl-code" style={{ margin: 0 }}>
-          <div className="wl-code__bar">
-            <span className="wl-code__file">content/showcase/myaddon.json</span>
-            <span className="wl-code__lang">json</span>
-          </div>
-          <pre className="wl-code__pre">
-            <code dangerouslySetInnerHTML={{ __html: highlight(TEMPLATE, "json") }} />
-          </pre>
-        </figure>
+        <div className="showcase__template">{template}</div>
       </section>
     </main>
   );

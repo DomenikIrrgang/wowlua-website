@@ -55,6 +55,7 @@ export function Banner({ kind, label, children }: { kind: "warning" | "note"; la
   return (
     <div
       role="note"
+      className="docs-banner"
       style={{
         display: "flex",
         flexWrap: "wrap",

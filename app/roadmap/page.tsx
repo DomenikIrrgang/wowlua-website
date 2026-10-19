@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ogMetadata } from "@/lib/og";
+import { Disclosure } from "@/components/news/Disclosure";
 import { githubUrl } from "@/lib/content";
 import { renderMarkdown } from "@/lib/markdown";
 import { milestones, type Status } from "@/lib/roadmap";
@@ -18,6 +20,12 @@ const MARK: Record<Status, { glyph: string; color: string }> = {
   "in progress": { glyph: "~", color: "var(--amber-ink)" },
   planned: { glyph: "·", color: "var(--ink-muted)" },
 };
+// The status word in a milestone's phone accordion row.
+const SHORT: Record<Status, { word: string; color: string }> = {
+  done: { word: "done", color: "var(--success)" },
+  "in progress": { word: "now", color: "var(--amber-ink)" },
+  planned: { word: "planned", color: "var(--ink-muted)" },
+};
 
 export default async function RoadmapPage() {
   const ms = milestones();
@@ -27,7 +35,7 @@ export default async function RoadmapPage() {
   );
 
   return (
-    <main className="page" id="main" style={{ maxWidth: 1008 }}>
+    <main className="page roadmap-page" id="main" style={{ maxWidth: 1008 }}>
       <div className="page__head">
         <h1 className="display-l">Roadmap</h1>
         <p>
@@ -45,12 +53,31 @@ export default async function RoadmapPage() {
           </span>
           <span className="wl-badge">{count("planned")} planned</span>
         </div>
+        <p className="caption roadmap__hint">tap a milestone to see what it covers and its exit criterion</p>
       </div>
 
       <ol className="roadmap">
         {ms.map((m, i) => (
-          <li key={m.id} className="roadmap__item" id={m.anchor}>
-            <span aria-hidden="true" className="roadmap__dot" style={{ background: COLOR[m.status] }} />
+          <Disclosure
+            as="li"
+            key={m.id}
+            className="roadmap__item"
+            id={m.anchor}
+            defaultOpen={m.status === "in progress"}
+            attrs={{ "data-status": m.status }}
+            summary={
+              <>
+                <span className="label roadmap__sum-id" style={{ color: m.status === "in progress" ? "var(--amber-ink)" : "var(--ink-muted)" }}>
+                  {m.id}
+                </span>
+                <span className="body-s roadmap__sum-title">{m.title}</span>
+                <span className="caption" style={{ color: SHORT[m.status].color }}>
+                  {SHORT[m.status].word}
+                </span>
+              </>
+            }
+          >
+            <span aria-hidden="true" className="roadmap__dot m-disc__keep" style={{ background: COLOR[m.status] }} />
             <div className="roadmap__head">
               <span className="heading-2" style={{ color: m.status === "in progress" ? "var(--amber-ink)" : "var(--ink-muted)" }}>
                 {m.id}
@@ -68,6 +95,20 @@ export default async function RoadmapPage() {
               {m.status === "planned" && <span className="wl-badge">planned</span>}
               {m.release && <span className="wl-badge wl-badge--release">released as {m.release}</span>}
             </div>
+            {/* Phones: the status line and, for done milestones, the scope that wider screens fold into "scope and status notes". */}
+            {m.status === "done" && (
+              <p className="caption roadmap__phone">
+                done{m.date ? ` · ${m.date}` : ""}
+                {m.release ? ` · released as ${m.release}` : ""}
+              </p>
+            )}
+            {m.status === "in progress" && (
+              <span className="wl-badge wl-badge--planned roadmap__phone">
+                <span className="wl-badge__dot" aria-hidden="true" />
+                in progress
+              </span>
+            )}
+            {m.status === "done" && rendered[i].intro && <div className="md roadmap__intro roadmap__phone" dangerouslySetInnerHTML={{ __html: rendered[i].intro }} />}
             {m.status !== "done" && <div className="md roadmap__intro" dangerouslySetInnerHTML={{ __html: rendered[i].intro }} />}
             {m.stages.length > 0 && m.status !== "done" && (
               <div className="roadmap__stages">
@@ -75,12 +116,18 @@ export default async function RoadmapPage() {
                   stages
                 </span>
                 <ul>
-                  {m.stages.map((s) => (
-                    <li key={s.id}>
-                      <span style={{ color: MARK[s.status].color }}>{MARK[s.status].glyph}</span> {s.id} {s.title.split(":")[0]}
-                      {s.note && <span style={{ color: "var(--ink-muted)" }}> · {s.note}</span>}
-                    </li>
-                  ))}
+                  {m.stages.map((s) => {
+                    const name = s.title.split(":")[0];
+                    return (
+                      <li key={s.id}>
+                        <span style={{ color: MARK[s.status].color }}>{MARK[s.status].glyph}</span>{" "}
+                        <span>
+                          {s.id} {name}
+                          {s.note && <span style={{ color: "var(--ink-muted)" }}> · {s.note}</span>}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
@@ -90,15 +137,18 @@ export default async function RoadmapPage() {
               </div>
             )}
             {(m.status === "done" ? rendered[i].intro || rendered[i].rest : rendered[i].rest) && (
-              <details className="roadmap__more">
+              <details className={`roadmap__more${rendered[i].rest ? "" : " roadmap__more--scope"}`}>
                 <summary className="caption">{m.status === "done" ? "scope and status notes" : "status notes"}</summary>
-                {m.status === "done" && rendered[i].intro && <div className="md roadmap__intro" dangerouslySetInnerHTML={{ __html: rendered[i].intro }} />}
+                {m.status === "done" && rendered[i].intro && <div className="md roadmap__intro roadmap__scope" dangerouslySetInnerHTML={{ __html: rendered[i].intro }} />}
                 {rendered[i].rest && <div className="md" dangerouslySetInnerHTML={{ __html: rendered[i].rest }} />}
               </details>
             )}
-          </li>
+          </Disclosure>
         ))}
       </ol>
+      <Link href="/changelog" className="label roadmap__changelog">
+        see what shipped in the changelog →
+      </Link>
     </main>
   );
 }

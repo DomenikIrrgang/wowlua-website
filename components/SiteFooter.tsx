@@ -30,15 +30,27 @@ export function SiteFooter() {
     { label: "showcase", href: "/showcase" },
     { label: "badge", href: "/badge" },
   ];
+  const item = (l: L) => (
+    <li key={l.href}>{l.href.startsWith("http") ? <a href={l.href}>{l.label}</a> : <Link href={l.href}>{l.label}</Link>}</li>
+  );
   const col = (title: string, links: L[]) => (
     <nav className="wl-site-footer__col" aria-label={title}>
       <h2>{title.toLowerCase()}</h2>
-      <ul>
-        {links.map((l) => (
-          <li key={l.href}>{l.href.startsWith("http") ? <a href={l.href}>{l.label}</a> : <Link href={l.href}>{l.label}</Link>}</li>
-        ))}
-      </ul>
+      <ul>{links.map(item)}</ul>
     </nav>
+  );
+  // On phones the three columns fold into one list of sections.
+  const fold = (title: string, links: L[]) => (
+    <details className="m-footer__section">
+      <summary className="label">
+        <span>
+          <span aria-hidden="true"># </span>
+          {title.toLowerCase()}
+        </span>
+        <span className="m-footer__sign" aria-hidden="true" />
+      </summary>
+      <ul className="body-s">{links.map(item)}</ul>
+    </details>
   );
 
   return (
@@ -51,6 +63,11 @@ export function SiteFooter() {
         {col("Learn", learn)}
         {col("Reference", reference)}
         {col("Project", project)}
+        <nav className="m-footer" aria-label="Footer">
+          {fold("Learn", learn)}
+          {fold("Reference", reference)}
+          {fold("Project", project)}
+        </nav>
         <div className="wl-site-footer__base">
           <span>MIT licence · fonts: Martian Mono, IBM Plex Mono (SIL OFL)</span>
           <span>Not affiliated with Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment, Inc.</span>

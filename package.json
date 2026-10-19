@@ -6,6 +6,8 @@
     "content": "node scripts/fetch-content.mjs",
     "predev": "node scripts/fetch-content.mjs --if-missing",
     "dev": "next dev",
+    "predev:lan": "node scripts/fetch-content.mjs --if-missing",
+    "dev:lan": "next dev --hostname 0.0.0.0",
     "prebuild": "node scripts/fetch-content.mjs",
     "build": "next build",
     "start": "next start",

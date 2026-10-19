@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ogMetadata } from "@/lib/og";
 import Link from "next/link";
+import { BlogList } from "@/components/news/BlogList";
 import { REPO_URL } from "@/lib/content";
 import { feedItems } from "@/lib/feed";
 
@@ -25,41 +26,11 @@ export default function BlogPage() {
           <h1 className="display-l">Release notes and field reports</h1>
           <p className="body-l">What changed in each release, and what testing wowlua against real addons taught us.</p>
         </header>
-        <ol className="blog__list">
-          {items.map((it) => (
-            <li key={it.href} className="blog__item">
-              <time className="caption" dateTime={it.date}>
-                {it.date}
-              </time>
-              <article>
-                <h2 className="heading-2" style={{ margin: 0 }}>
-                  <Link href={it.href} style={{ color: "var(--ink)", textDecoration: "none" }}>
-                    {it.title}
-                  </Link>
-                </h2>
-                <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)", maxWidth: "72ch" }}>
-                  {it.summary}
-                </p>
-                <div className="wl-badge-row">
-                  {it.tags.map((t) => (
-                    <span key={t} className="wl-badge">
-                      {t}
-                    </span>
-                  ))}
-                  {it.author && (
-                    <span className="caption" style={{ color: "var(--ink-muted)" }}>
-                      by {it.author}
-                    </span>
-                  )}
-                </div>
-              </article>
-            </li>
-          ))}
-        </ol>
+        <BlogList items={items} topics={topics} />
       </div>
       <aside className="blog__side" aria-label="Blog topics and feeds">
         {topics.length > 0 && (
-          <section style={{ display: "grid", gap: 10 }}>
+          <section className="blog__side-topics" style={{ display: "grid", gap: 10 }}>
             <h2 className="label" style={{ margin: 0, color: "var(--ink-muted)" }}>
               topics
             </h2>
@@ -76,9 +47,15 @@ export default function BlogPage() {
           <h2 className="label" style={{ margin: 0, color: "var(--ink-muted)" }}>
             follow along
           </h2>
-          <a href="/blog/rss.xml">rss feed ↗</a>
-          <a href={`${REPO_URL()}/releases`}>github releases ↗</a>
-          <Link href="/changelog">full changelog →</Link>
+          <a href="/blog/rss.xml">
+            <span>rss feed</span> <span aria-hidden="true">↗</span>
+          </a>
+          <a href={`${REPO_URL()}/releases`}>
+            <span>github releases</span> <span aria-hidden="true">↗</span>
+          </a>
+          <Link href="/changelog">
+            <span>full changelog</span> <span aria-hidden="true">→</span>
+          </Link>
         </section>
       </aside>
     </main>

@@ -1,0 +1,114 @@
+/* wowlua.dev on a phone: landing. From the "wowlua.dev · mobile" design canvas (390 px artboards). */
+
+/* Phone-only variants (terminal, feature accordion, dev window, 404 extras) stay off the desktop page. */
+@media not all and (max-width: 760px) {
+  .landing-term--phone,
+  .landing-acc,
+  .landing-devwin--phone,
+  .not-found__caret,
+  .not-found__search,
+  .not-found__caption,
+  .not-found__home { display: none; }
+}
+
+@media (max-width: 760px) {
+  /* Sections: 16 px gutters, 48 px apart with a rule between. The !important ones beat inline styles. */
+  .landing .landing-section { gap: 20px !important; }
+  .landing .landing-section:not(.landing-hero) { width: auto; margin: 0 16px; padding: 48px 0 !important; border-top: 1px solid var(--line); }
+  .landing .landing-section h2.heading-1,
+  .landing .wl-feature-grid__head h2 { font-size: 24px; line-height: 32px; }
+  .landing .landing-section:not(.landing-hero) h2 + p { font-size: 13px; line-height: 21px; }
+
+  /* Hero */
+  .landing .landing-hero { padding: 40px 16px 48px !important; gap: 24px !important; }
+  .landing-hero__meta { font-size: 11.5px !important; line-height: 16px; }
+  .landing-hero__sep { display: none; }
+  .landing-hero__os { display: block; }
+  .landing-hero__title { font-size: 32px; line-height: 38px; max-width: none !important; }
+  .landing-hero__intro { font-size: 16px; line-height: 26px; }
+  .landing-hero__actions { display: grid !important; gap: 10px !important; }
+  .landing-hero__actions .wl-btn { height: 48px; font-size: 14px; }
+  .landing-hero__or { margin-top: 4px; text-align: center; font-size: 11.5px !important; line-height: 16px; }
+  .landing-hero__or a { display: inline-block; padding: 14px 0; margin: -8px 0; }
+
+  /* Install box: three equal tabs; copy commands wrap instead of scrolling */
+  .landing .wl-install .wl-tabs__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .landing .wl-install .wl-tabs__tab { height: 44px; justify-content: center; padding: 0 4px; }
+  .landing .wl-copy-cmd { height: auto; min-height: 48px; align-items: stretch; padding-right: 0; }
+  .landing .wl-copy-cmd__prompt { align-self: flex-start; padding-top: 13px; }
+  .landing .wl-copy-cmd__text { align-self: center; white-space: pre-wrap; word-break: break-all; overflow: visible; padding: 12px 0; font-size: 13px; line-height: 20px; }
+  .landing .wl-copy-cmd__btn { height: auto; min-height: 46px; min-width: 72px; align-self: stretch; }
+
+  /* Terminal: the phone transcript, smaller type, long lines wrap under a hanging indent */
+  .landing-term--wide { display: none; }
+  .landing-term--phone .wl-term__body { font-size: 12.5px; line-height: 20px; padding: 14px 14px 16px; overflow-x: visible; }
+  .landing-term__line { display: block; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; }
+
+  /* Two ways in */
+  .landing-cards { display: grid !important; gap: 20px !important; }
+  .landing .landing-card { padding: 20px 16px; gap: 14px; }
+  .landing-card__more { display: flex; align-items: center; min-height: 44px; }
+
+  /* Source and emitted code stacked, "↓ compiles to" between, lines wrapped */
+  .landing .wl-compare { gap: 20px; }
+  .landing .wl-compare__arrow { justify-content: flex-start; gap: 10px; padding: 0; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.02em; }
+  .landing .wl-compare__arrow b { font-size: 16px; }
+  .landing .wl-code__pre { font-size: 12.5px; line-height: 20px; }
+  .landing .wl-code__pre.m-wrap code { min-width: 0; }
+  .landing .wl-code__pre.m-wrap .wl-code__line { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: calc(16px + 8ch); text-indent: -8ch; }
+
+  /* Features: a numbered accordion in place of the grid */
+  .landing .wl-feature-grid { gap: 20px; }
+  .landing .wl-feature-grid__head { gap: 8px; }
+  .landing .wl-feature-grid__list { display: none; }
+  .landing-acc { list-style: none; margin: 0; padding: 0; background: var(--bg-200); border: 1px solid var(--line); }
+  .landing-acc__item + .landing-acc__item { border-top: 1px solid var(--line); }
+  .landing-acc__head { margin: 0; }
+  .landing-acc__btn {
+    width: 100%; display: grid; grid-template-columns: 44px minmax(0, 1fr) 36px; align-items: center; min-height: 64px; padding: 10px 0;
+    background: transparent; border: 0; color: var(--ink); text-align: left; cursor: pointer; font: inherit;
+  }
+  .landing-acc__btn:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .landing-acc__num { padding-left: 14px; color: var(--amber-ink); }
+  .landing-acc__titles { display: grid; gap: 2px; min-width: 0; }
+  .landing-acc__tag { color: var(--ink-muted); }
+  .landing-acc__sign { color: var(--ink-muted); font-size: 18px; text-align: center; }
+  .landing-acc__panel { padding: 0 16px 18px 44px; display: grid; gap: 10px; min-width: 0; }
+  .landing-acc__panel p { margin: 0; color: var(--ink-muted); }
+  .landing-acc__code { margin: 0; padding: 10px 12px; background: var(--bg-000); border: 1px solid var(--line); font-size: 12px; line-height: 18px; overflow-x: auto; color: var(--ink); }
+
+  /* Dev window: heading, the compact window, then the list */
+  .landing .landing-dev { display: grid !important; gap: 20px; }
+  .landing-dev__text { display: contents !important; }
+  .landing-dev__text > h2,
+  .landing-dev__text > p { margin-top: -8px !important; }
+  .landing-dev__list { order: 2; gap: 10px !important; font-size: 13px !important; line-height: 21px; }
+  .landing-dev__list li { display: grid; grid-template-columns: 20px minmax(0, 1fr); }
+  .landing-devwin--wide { display: none; }
+  .landing-devwin--phone { order: 1; }
+
+  /* Built in the open */
+  .landing .landing-open { gap: 16px !important; }
+  .landing-links { display: grid !important; gap: 10px !important; }
+  .landing .landing-link { padding: 16px; gap: 4px; }
+
+  /* 404 */
+  .page.not-found { gap: 24px; padding: 48px 16px 56px; }
+  .not-found .wl-term__body { font-size: 12.5px; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .not-found__search {
+    width: 100%; height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 14px;
+    background: var(--bg-000); border: 1px solid var(--line-strong); color: var(--ink-muted); font: 400 14px/20px var(--font-mono); cursor: pointer; text-align: left;
+  }
+  .not-found__search span { color: var(--amber-ink); }
+  .not-found__search:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .not-found__nav { display: grid !important; gap: 0 !important; }
+  .not-found__caption { margin-bottom: 10px; color: var(--ink-muted); }
+  .not-found__link {
+    display: flex; justify-content: space-between; align-items: center; min-height: 52px;
+    border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 13px; line-height: 21px;
+  }
+  .not-found__link:first-of-type { border-top: 1px solid var(--line); }
+  .not-found__link::after { content: "→"; color: var(--amber-ink); }
+  .not-found__home-link { display: none; }
+  .not-found__home { height: 48px; font-size: 14px; }
+}

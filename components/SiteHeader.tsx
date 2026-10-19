@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DiscordIcon, GithubIcon, LogoFull } from "./Logo";
+import { MobileMenu } from "./MobileMenu";
 import { openSearch } from "./SearchPalette";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -27,9 +28,14 @@ export function SiteHeader({ version, repoUrl, discordUrl }: { version: string |
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
+  const close = useCallback(() => setOpen(false), []);
+  const menuToSearch = useCallback(() => {
+    setOpen(false);
+    openSearch();
+  }, []);
 
   return (
-    <header className={`wl-site-header${open ? " is-open" : ""}`} data-site-header>
+    <header className="wl-site-header" data-site-header>
       <div className="wl-site-header__inner">
         <Link className="wl-site-header__brand" href="/" aria-label="wowlua home">
           <LogoFull />
@@ -45,6 +51,10 @@ export function SiteHeader({ version, repoUrl, discordUrl }: { version: string |
         <div className="wl-site-header__end">
           <ThemeToggle />
           <button className="wl-site-header__search" type="button" aria-label="search the docs" onClick={() => openSearch()}>
+            <svg className="wl-site-header__search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" aria-hidden="true">
+              <circle cx="7" cy="7" r="4.75" />
+              <path d="M10.5 10.5 14.25 14.25" />
+            </svg>
             <span>search docs</span>
             <kbd className="wl-kbd">ctrl k</kbd>
           </button>
@@ -67,6 +77,16 @@ export function SiteHeader({ version, repoUrl, discordUrl }: { version: string |
           </button>
         </div>
       </div>
+      {open && (
+        <MobileMenu
+          nav={NAV.map((n) => ({ label: n.label, href: n.href, current: n.match(pathname) }))}
+          version={version}
+          repoUrl={repoUrl}
+          discordUrl={discordUrl}
+          onClose={close}
+          onSearch={menuToSearch}
+        />
+      )}
     </header>
   );
 }
