@@ -4,7 +4,8 @@ import { isoDay, shortVersion } from "@/lib/format";
 import { SidebarToggle } from "./SidebarToggle";
 import { VersionSelect, type VersionOption } from "./VersionSelect";
 
-export function DocsSidebar({ version, current }: { version: string; current: string }) {
+/** `title` names the page in the phone's contents bar when the sidebar does not list it. */
+export function DocsSidebar({ version, current, title }: { version: string; current: string; title?: string }) {
   const latest = latestRelease();
   const latestId = latest ? shortVersion(latest.tag) : null;
   const options: VersionOption[] = versions().map((v) => ({
@@ -12,9 +13,13 @@ export function DocsSidebar({ version, current }: { version: string; current: st
     label: v.id === "main" ? "main · unreleased" : v.id === latestId ? `v${v.id} · latest release` : `v${v.id}`,
     caption: isoDay(v.date),
   }));
+  const sections = sidebar(version);
+  const section = sections.find((s) => s.items.some((i) => i.repoPath === current));
+  const item = section?.items.find((i) => i.repoPath === current);
+  const crumbs = ["docs", ...(section ? [section.title] : []), item?.label ?? title ?? "contents"];
 
   return (
-    <SidebarToggle>
+    <SidebarToggle crumbs={crumbs}>
       <div className="docs-sidebar__version">
         <label className="caption" htmlFor="docs-version" style={{ color: "var(--ink-muted)" }}>
           docs version
@@ -22,7 +27,7 @@ export function DocsSidebar({ version, current }: { version: string; current: st
         <VersionSelect id="docs-version" value={version} options={options} />
       </div>
       <nav className="wl-docs-sidebar" aria-label="Documentation">
-        {sidebar(version).map((s) => (
+        {sections.map((s) => (
           <div className="wl-docs-sidebar__section" key={s.title}>
             <h2 className="wl-docs-sidebar__title">{s.title}</h2>
             <ul>

@@ -36,10 +36,13 @@ export default async function DiagnosticPage({ params }: { params: Promise<{ cod
   const i = all.findIndex((x) => x.code === d.code);
   const near = all.slice(Math.max(0, i - 3), i + 4).filter((x) => x.code !== d.code);
   const refs = mentions("main", d.code);
-  const badge = d.kind === "error" ? "wl-badge--error" : d.kind === "warning" ? "wl-badge--warning" : "wl-badge--note";
+  const badgeOf = (kind: string) => (kind === "error" ? "wl-badge--error" : kind === "warning" ? "wl-badge--warning" : "wl-badge--note");
+  const badge = badgeOf(d.kind);
+  const area = d.area?.replace(/\s*\(.*\)$/, "").toLowerCase();
+  const following = all[i + 1];
 
   return (
-    <div className="docs">
+    <div className="docs docs--entry">
       <JsonLd
         data={breadcrumbs([
           { name: "docs", path: "/docs" },
@@ -51,6 +54,10 @@ export default async function DiagnosticPage({ params }: { params: Promise<{ cod
         <DocsSidebar version="main" current={APPENDIX} />
       </aside>
       <main className="docs__main" id="main">
+        {/* Phones: a back link in place of the contents bar and breadcrumb. */}
+        <Link className="docs-back label" href="/docs/spec/appendix/diagnostics">
+          <span aria-hidden="true">←</span>diagnostics{area ? ` / ${area}` : ""}
+        </Link>
         <Breadcrumb
           items={[
             { label: "docs", href: "/docs" },
@@ -63,12 +70,48 @@ export default async function DiagnosticPage({ params }: { params: Promise<{ cod
             <span className={`wl-badge ${badge}`}>{d.kind}</span>
             {d.area && <span className="wl-badge">{d.area.replace(/\s*\(.*\)$/, "").toLowerCase()}</span>}
           </div>
-          <h1 className="heading-1">{d.code}</h1>
+          <h1 className="heading-1">
+            {d.code}
+            <span className={`wl-badge ${badge} docs-entry__kind`}>{d.kind}</span>
+          </h1>
           <p className="body-l docs__lead" dangerouslySetInnerHTML={{ __html: inlineMd(d.summary) }} />
           <div className="docs__meta caption">
             <span>{d.section.toLowerCase()}</span>
             <a href={githubUrl("main", APPENDIX)}>source on GitHub ↗</a>
           </div>
+          {/* Phones: the facts the badges and the first paragraph give on wider screens. */}
+          <dl className="docs-entry__facts">
+            {area && (
+              <div>
+                <dt className="caption">area</dt>
+                <dd className="body-s">{area}</dd>
+              </div>
+            )}
+            <div>
+              <dt className="caption">fails the build</dt>
+              <dd className="body-s">{d.kind === "error" ? "yes" : d.kind === "warning" ? "with --deny-warnings" : "no"}</dd>
+            </div>
+            {twin ? (
+              <div>
+                <dt className="caption">{twin.kind === "warning" ? "in plain Lua" : "in wowlua files"}</dt>
+                <dd>
+                  <Link className={`wl-badge ${badgeOf(twin.kind)}`} href={`/docs/diagnostics/${twin.code}`}>
+                    {twin.code}
+                  </Link>
+                </dd>
+              </div>
+            ) : (
+              // Appendix B.2: name and type errors in pure Lua files are reported as the warning with the same number.
+              /^E[12]\d{3}$/.test(d.code) && (
+                <div>
+                  <dt className="caption">in plain Lua</dt>
+                  <dd>
+                    <span className="wl-badge wl-badge--warning">W{d.code.slice(1)}</span>
+                  </dd>
+                </div>
+              )
+            )}
+          </dl>
         </header>
 
         <div className="md">
@@ -101,7 +144,7 @@ export default async function DiagnosticPage({ params }: { params: Promise<{ cod
           )}
 
           <h2 className="heading-2">Nearby codes</h2>
-          <div className="wl-table" role="region" aria-label="Nearby codes" tabIndex={0}>
+          <div className="wl-table docs-codes" role="region" aria-label="Nearby codes" tabIndex={0}>
             <table>
               <thead>
                 <tr>
@@ -111,7 +154,7 @@ export default async function DiagnosticPage({ params }: { params: Promise<{ cod
               </thead>
               <tbody>
                 {near.map((x) => (
-                  <tr key={x.code}>
+                  <tr key={x.code} data-kind={x.kind}>
                     <td>
                       <Link href={`/docs/diagnostics/${x.code}`}>{x.code}</Link>
                     </td>
@@ -121,10 +164,23 @@ export default async function DiagnosticPage({ params }: { params: Promise<{ cod
               </tbody>
             </table>
           </div>
-          <p>
+          <p className="docs-entry__all">
             <Link href="/docs/spec/appendix/diagnostics">All diagnostics →</Link>
           </p>
         </div>
+        {/* Phones: back to the list, or on to the next code. */}
+        <nav className="wl-page-nav docs-entry__nav" aria-label="All diagnostics and the next code">
+          <Link className="wl-page-nav__link wl-page-nav__link--prev" href="/docs/spec/appendix/diagnostics">
+            <span className="wl-page-nav__dir">← all diagnostics</span>
+            <span className="wl-page-nav__title">{area ?? "appendix B"}</span>
+          </Link>
+          {following && (
+            <Link className="wl-page-nav__link wl-page-nav__link--next" href={`/docs/diagnostics/${following.code}`}>
+              <span className="wl-page-nav__dir">next →</span>
+              <span className="wl-page-nav__title">{following.code}</span>
+            </Link>
+          )}
+        </nav>
       </main>
       <aside className="docs__toc" />
     </div>

@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DiagnosticsBrowser } from "@/components/docs/DiagnosticsBrowser";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
+import { MobileToc } from "@/components/docs/MobileToc";
 import { Banner, Breadcrumb, PageNav, Toc } from "@/components/docs/parts";
+import { SectionFold } from "@/components/docs/SectionFold";
+import { APPENDIX, diagnosticAreas } from "@/components/docs/diagnosticAreas";
 import { JsonLd, SITE, breadcrumbs } from "@/components/JsonLd";
 import {
   docsHref,
@@ -48,6 +52,9 @@ async function load(params: Promise<Params>) {
   return { version, page, rendered };
 }
 
+/** Long reference pages whose sections fold behind their headings on phones. */
+const folds = (repoPath: string) => /^spec\/(toolchain|stdlib)\/(?!README\.md$)/.test(repoPath);
+
 /** "12. CLI" → "CLI", "Appendix B. Diagnostics" → "Diagnostics" (the page's h1 keeps the number). */
 const searchTitle = (title: string) => title.replace(/^(Appendix [A-Z]\.|[\d.]+)\s+/, "");
 
@@ -77,9 +84,12 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
     ...(section && section.items[0].href !== path ? [{ name: section.title, path: section.items[0].href }] : []),
     { name: searchTitle(rendered.title ?? "docs"), path },
   ];
+  // On phones the diagnostics appendix is browsed by area instead of read as tables.
+  const areas = page.repoPath === APPENDIX ? diagnosticAreas(version) : [];
+  const fold = folds(page.repoPath);
 
   return (
-    <div className="docs">
+    <div className={areas.length ? "docs docs--codes" : "docs"}>
       <JsonLd
         data={[
           breadcrumbs(crumbs),
@@ -97,7 +107,7 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
         ]}
       />
       <aside className="docs__side">
-        <DocsSidebar version={version} current={page.repoPath} />
+        <DocsSidebar version={version} current={page.repoPath} title={searchTitle(rendered.title ?? "docs").toLowerCase()} />
       </aside>
       <main className="docs__main" id="main">
         {version !== "main" && (
@@ -129,8 +139,15 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
             <a href={githubUrl(version, page.repoPath)}>source on GitHub ↗</a>
           </div>
         </header>
-        <article className="md" dangerouslySetInnerHTML={{ __html: rendered.html }} />
+        {!areas.length && <MobileToc key={`toc:${path}`} entries={rendered.toc} />}
+        <article className="md" data-fold={fold ? "" : undefined} dangerouslySetInnerHTML={{ __html: rendered.html }} />
+        {fold && <SectionFold key={`fold:${path}`} />}
+        {areas.length > 0 && <DiagnosticsBrowser areas={areas} />}
         <PageNav prev={prev} next={next} />
+        <p className="docs__source caption">
+          <span>{version === "main" ? `main · ${ref.sha?.slice(0, 7) ?? ""}` : `v${version} · ${ref.ref}`}</span>
+          <a href={githubUrl(version, page.repoPath)}>source on GitHub ↗</a>
+        </p>
       </main>
       <aside className="docs__toc">
         <Toc entries={rendered.toc} />

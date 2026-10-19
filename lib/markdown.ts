@@ -87,10 +87,12 @@ function rehypeDesign(ctx: Ctx, out: { title: string | null; description: string
           const cls = (code.properties.className as string[] | undefined) ?? [];
           const lang = (cls.find((c) => c.startsWith("language-")) ?? "").replace("language-", "");
           const text = toString(code).replace(/\n$/, "");
+          // Phones wrap long code lines, except in file trees, whose columns only read unbroken.
+          const tree = /[├└]──/.test(text) ? " data-nowrap" : "";
           (parent as Element).children[index] = {
             type: "raw",
             value:
-              `<figure class="wl-code md-code"><div class="wl-code__bar"><span class="wl-code__lang">${escapeHtml(lang || "text")}</span>` +
+              `<figure class="wl-code md-code"${tree}><div class="wl-code__bar"><span class="wl-code__lang">${escapeHtml(lang || "text")}</span>` +
               `<button class="wl-textbtn" type="button" data-copy>copy</button></div>` +
               `<pre class="wl-code__pre"><code>${highlight(text, lang)}</code></pre></figure>`,
           } as unknown as ElementContent;
@@ -98,6 +100,14 @@ function rehypeDesign(ctx: Ctx, out: { title: string | null; description: string
         }
         case "table": {
           if (!parent || index === undefined) break;
+          // Each cell carries its column's name, so phones can show a row as a stacked card.
+          const rows = (tag: string) =>
+            node.children
+              .filter((c): c is Element => c.type === "element" && c.tagName === tag)
+              .flatMap((s) => s.children.filter((r): r is Element => r.type === "element" && r.tagName === "tr"));
+          const cells = (tr: Element) => tr.children.filter((c): c is Element => c.type === "element" && (c.tagName === "td" || c.tagName === "th"));
+          const labels = rows("thead").flatMap(cells).map((th) => toString(th).trim());
+          for (const tr of rows("tbody")) cells(tr).forEach((td, i) => labels[i] && (td.properties.dataLabel = labels[i]));
           (parent as Element).children[index] = el("div", { className: ["wl-table"], role: "region", tabIndex: 0 }, [node]);
           return "skip";
         }
