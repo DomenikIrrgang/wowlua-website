@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-type Choice = "system" | "dark" | "light";
+export type Choice = "system" | "dark" | "light";
+export const CHOICES: Choice[] = ["system", "dark", "light"];
 
 /** Runs before paint (in <head>) so a stored choice never flashes. */
 export const THEME_SCRIPT = `try{var t=localStorage.getItem("wl-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
@@ -48,9 +49,21 @@ const OPTIONS: { choice: Choice; icon: React.ReactNode }[] = [
   },
 ];
 
-export function ThemeToggle() {
+/** The stored choice (null until mounted) and a setter that applies and stores it. */
+export function useTheme(): [Choice | null, (c: Choice) => void] {
   const [choice, setChoice] = useState<Choice | null>(null);
   useEffect(() => setChoice(stored()), []);
+  return [
+    choice,
+    (c) => {
+      apply(c);
+      setChoice(c);
+    },
+  ];
+}
+
+export function ThemeToggle() {
+  const [choice, setChoice] = useTheme();
 
   return (
     <div className="wl-theme-toggle wl-theme-toggle--icons" role="radiogroup" aria-label="Theme">
@@ -63,10 +76,7 @@ export function ThemeToggle() {
           role="radio"
           aria-checked={choice === o.choice}
           type="button"
-          onClick={() => {
-            apply(o.choice);
-            setChoice(o.choice);
-          }}
+          onClick={() => setChoice(o.choice)}
         >
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
             {o.icon}

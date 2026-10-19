@@ -53,7 +53,8 @@ export const blogPosts = cache((): Post[] => {
   if (!existsSync(DIR)) return [];
   return readdirSync(DIR)
     .filter((f) => f.endsWith(".md"))
-    .map((f) => parse(f.replace(/\.md$/, ""), readFileSync(path.join(DIR, f), "utf8")))
+    // A Windows checkout (core.autocrlf) has CRLF line ends; the front matter parser expects LF.
+    .map((f) => parse(f.replace(/\.md$/, ""), readFileSync(path.join(DIR, f), "utf8").replace(/\r\n/g, "\n")))
     .sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 });
 
