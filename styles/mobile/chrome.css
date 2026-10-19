@@ -3,10 +3,13 @@
 
 /* Phone-only parts stay out of the desktop layout */
 .wl-site-header__search-icon, .wl-search__cancel, .wl-search__chips, .wl-search__summary, .wl-search__nomatch, .m-footer { display: none; }
-@media (min-width: 761px) { .m-menu { display: none; } }
+@media (min-width: 1101px) { .m-menu { display: none; } }
 
-@media (max-width: 760px) {
+/* The full desktop header needs about 1060 px, so tablets and phones held sideways get the phone header and menu too */
+@media (max-width: 1100px) {
   /* Header: logo and version on the left, search and menu as 44 px icon buttons on the right */
+  .wl-site-header__nav, [data-site-header] .wl-theme-toggle, .wl-site-header__search span, .wl-site-header__search kbd { display: none; }
+  .wl-site-header__menu { display: inline-grid; }
   .wl-site-header__inner { padding: 0 6px 0 var(--space-4); gap: var(--space-2); }
   .wl-site-header__brand svg { height: 22px; }
   .wl-site-header__version { display: inline-block; }
@@ -74,7 +77,9 @@
   .m-menu__links { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
   .m-menu__links > div { display: flex; gap: 20px; }
   .m-menu__links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); }
+}
 
+@media (max-width: 760px) {
   /* Search: the palette becomes a full-screen sheet */
   .wl-search-scrim { padding: 0; background: var(--bg-100); align-items: stretch; }
   .wl-search {
