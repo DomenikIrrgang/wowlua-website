@@ -21,7 +21,7 @@ export default function PackagesPage() {
   const registry = milestones().find((m) => /registry/i.test(m.title));
   const pm = findPage("main", ["spec", "toolchain", "package-manager"]);
   return (
-    <main className="page" id="main" style={{ maxWidth: 1008 }}>
+    <main className="page tools-packages" id="main" style={{ maxWidth: 1008 }}>
       <div className="page__head">
         <h1 className="display-l">Packages</h1>
         <p>wowlua libraries, Lua libraries and type declarations you can add to a project with one command. AddOns are published to addon sites instead.</p>
@@ -48,7 +48,7 @@ export default function PackagesPage() {
         </div>
       </aside>
 
-      <figure className="wl-code" style={{ margin: 0, maxWidth: 760 }}>
+      <figure className="wl-code tools-code" style={{ margin: 0, maxWidth: 760 }}>
         <div className="wl-code__bar">
           <span className="wl-code__file">~/MyAddon</span>
           <span className="wl-code__lang">sh</span>
@@ -59,7 +59,7 @@ export default function PackagesPage() {
       </figure>
 
       {pm && (
-        <p style={{ margin: 0 }}>
+        <p className="tools-more" style={{ margin: 0 }}>
           <Link href="/docs/spec/toolchain/package-manager">Read the package manager reference →</Link>
         </p>
       )}

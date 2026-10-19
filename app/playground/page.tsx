@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function PlaygroundPage() {
   const t = taste();
   return (
-    <main className="page" id="main" style={{ maxWidth: "var(--size-page)" }}>
+    <main className="page tools-playground" id="main" style={{ maxWidth: "var(--size-page)" }}>
       <div className="page__head">
         <span className="label" style={{ color: "var(--amber-ink)" }}>
           [ playground ]
@@ -34,7 +34,7 @@ export default function PlaygroundPage() {
         </div>
       </div>
       {t.code && (
-        <figure className="wl-code" style={{ margin: 0, maxWidth: 760 }}>
+        <figure className="wl-code tools-code" style={{ margin: 0, maxWidth: 760 }}>
           <div className="wl-code__bar">
             <span className="wl-code__file">src/main.wowlua</span>
             <span className="wl-code__lang">wowlua · a taste, from the README</span>
