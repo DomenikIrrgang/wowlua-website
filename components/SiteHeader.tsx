@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { GithubIcon, LogoFull } from "./Logo";
+import { DiscordIcon, GithubIcon, LogoFull } from "./Logo";
 import { openSearch } from "./SearchPalette";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -23,7 +23,7 @@ function isCli(p: string) {
   return /^\/docs(\/\d+\.\d+)?\/spec\/toolchain\/cli/.test(p);
 }
 
-export function SiteHeader({ version, repoUrl }: { version: string | null; repoUrl: string }) {
+export function SiteHeader({ version, repoUrl, discordUrl }: { version: string | null; repoUrl: string; discordUrl: string }) {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
@@ -50,6 +50,9 @@ export function SiteHeader({ version, repoUrl }: { version: string | null; repoU
           </button>
           <a className="wl-site-header__icon" href={repoUrl} aria-label="wowlua on GitHub">
             <GithubIcon />
+          </a>
+          <a className="wl-site-header__icon" href={discordUrl} aria-label="wowlua on Discord">
+            <DiscordIcon />
           </a>
           <button
             className="wl-site-header__icon wl-site-header__menu"

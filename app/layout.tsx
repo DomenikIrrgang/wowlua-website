@@ -9,7 +9,7 @@ import { SearchPalette } from "@/components/SearchPalette";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
-import { REPO_URL, latestRelease } from "@/lib/content";
+import { DISCORD_URL, REPO_URL, latestRelease } from "@/lib/content";
 import { shortVersion } from "@/lib/format";
 import { ogMetadata } from "@/lib/og";
 
@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <div className="site">
-          <SiteHeader version={latest ? `v${shortVersion(latest.tag)}` : null} repoUrl={REPO_URL()} />
+          <SiteHeader version={latest ? `v${shortVersion(latest.tag)}` : null} repoUrl={REPO_URL()} discordUrl={DISCORD_URL} />
           {children}
           <SiteFooter />
         </div>
