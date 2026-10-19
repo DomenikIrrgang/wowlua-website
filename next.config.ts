@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the container image (see Dockerfile).
   output: "standalone",
   poweredByHeader: false,
+  // `npm run dev:lan` serves the dev build to phones on the same network; Next blocks
+  // its dev resources (hot reload, chunks) for hosts not listed here.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "*.local"],
   headers() {
     return [
       // Embedded on other sites: let browsers and CDNs keep them for a day.
