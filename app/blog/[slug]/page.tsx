@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumb, Toc } from "@/components/docs/parts";
 import { JsonLd, SITE } from "@/components/JsonLd";
+import { PostToc } from "@/components/news/PostToc";
 import { blogPosts, findPost } from "@/lib/blog";
 import { renderMarkdown } from "@/lib/markdown";
 import { ogMetadata } from "@/lib/og";
@@ -30,7 +31,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const older = all[i + 1];
 
   return (
-    <div className="docs">
+    <div className="docs blog-post">
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -46,6 +47,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       />
       <main className="docs__main" id="main" style={{ maxWidth: 1000, margin: "0 auto" }}>
         <Breadcrumb items={[{ label: "blog", href: "/blog" }, { label: post.title.toLowerCase() }]} />
+        <Link href="/blog" className="label blog-post__back">
+          <span aria-hidden="true">←</span>blog
+        </Link>
         <header className="docs__head">
           <h1 className="display-l" style={{ margin: 0 }}>
             {post.title}
@@ -63,6 +67,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             ))}
           </div>
         </header>
+        <PostToc entries={r.toc} />
         <article className="md" dangerouslySetInnerHTML={{ __html: r.html }} />
         {(newer || older) && (
           <nav className="wl-page-nav" aria-label="Older and newer posts" style={{ marginTop: 32, maxWidth: "var(--size-prose)" }}>

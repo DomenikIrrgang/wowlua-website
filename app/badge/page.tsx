@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ogMetadata } from "@/lib/og";
+import { BadgePicker } from "@/components/news/BadgePicker";
 import { highlight } from "@/lib/highlight";
 
 export const metadata: Metadata = {
@@ -20,15 +21,15 @@ const VARIANTS = [
 const snippets = (file: string, height: number) => {
   const img = `${SITE}/badge/${file}`;
   return [
-    { lang: "html", label: "html", code: `<a href="${SITE}"><img src="${img}" alt="built with wowlua" height="${height}"></a>` },
-    { lang: "text", label: "markdown (GitHub, CurseForge)", code: `[![built with wowlua](${img})](${SITE})` },
-    { lang: "text", label: "bbcode (WoWInterface)", code: `[url=${SITE}][img]${img}[/img][/url]` },
+    { lang: "html", label: "html", short: "html", note: "your own website", code: `<a href="${SITE}"><img src="${img}" alt="built with wowlua" height="${height}"></a>` },
+    { lang: "text", label: "markdown (GitHub, CurseForge)", short: "markdown", note: "GitHub and CurseForge", code: `[![built with wowlua](${img})](${SITE})` },
+    { lang: "text", label: "bbcode (WoWInterface)", short: "bbcode", note: "WoWInterface", code: `[url=${SITE}][img]${img}[/img][/url]` },
   ];
 };
 
 export default function BadgePage() {
   return (
-    <main className="page" id="main" style={{ maxWidth: 1008 }}>
+    <main className="page badge-page" id="main" style={{ maxWidth: 1008 }}>
       <div className="page__head">
         <span className="label" style={{ color: "var(--amber-ink)" }}>
           [ badge ]
@@ -39,6 +40,11 @@ export default function BadgePage() {
           the <Link href="/showcase">showcase</Link>.
         </p>
       </div>
+
+      <BadgePicker
+        variants={VARIANTS}
+        snippets={Object.fromEntries(VARIANTS.map((v) => [v.id, snippets(v.file, v.height).map((s) => ({ label: s.short, note: s.note, code: s.code }))]))}
+      />
 
       {VARIANTS.map((v) => (
         <section key={v.id} className="badge-variant" aria-labelledby={`badge-${v.id}`}>
