@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DevWindowMock } from "@/components/landing/DevWindowMock";
+import { FeatureAccordion } from "@/components/landing/FeatureAccordion";
 import { InstallTabs } from "@/components/landing/InstallTabs";
 import { JsonLd, SITE } from "@/components/JsonLd";
 import { REPO_URL, findPage, latestRelease } from "@/lib/content";
@@ -11,108 +12,157 @@ import { roadmapSummary } from "@/lib/roadmap";
 
 const docsLink = (slug: string, fallback = "/docs") => (findPage("main", [slug]) ? `/docs/${slug}` : fallback);
 
+type TermLine = { cmd: string; comment: string } | { out: React.ReactNode; key: string };
+
 // Output recorded from wowlua main: `wowlua new`, `wowlua check` (the README's
 // diagnostic), `wowlua test` on the new project, `wowlua build --release`.
-function Terminal({ diagnostic }: { diagnostic: string }) {
-  const out = (s: React.ReactNode, key: string) => (
-    <span className="wl-term__out" key={key}>
-      {s}
-      {"\n"}
-    </span>
-  );
-  const cmd = (c: string, comment: string) => (
-    <>
-      <span className="wl-term__prompt">$</span> <span className="wl-term__cmd">{c}</span>
-      {comment && (
-        <>
-          {" ".repeat(Math.max(2, 40 - c.length))}
-          <span className="wl-term__comment"># {comment}</span>
-        </>
-      )}
-      {"\n"}
-    </>
-  );
+function termLines(diagnostic: string): TermLine[] {
   const diag = diagnostic ? diagnostic.split("\n") : [];
+  const lines: TermLine[] = [
+    { cmd: "wowlua new TypedDemo --flavors standard,camelot,vanilla", comment: "wowlua.json, src/, tests/" },
+    {
+      out: (
+        <>
+          {"     "}
+          <span className="wl-term__ok">Created</span> addon package in TypedDemo
+        </>
+      ),
+      key: "created",
+    },
+  ];
+  if (diag.length > 0) {
+    lines.push({ cmd: "cd TypedDemo && wowlua check", comment: "" });
+    diag.forEach((line, i) => {
+      const m = /^(error|warning)(\[[A-Z]\d{4}\])?(:.*)$/.exec(line);
+      lines.push({
+        out: m ? (
+          <>
+            <span style={{ color: `var(--${m[1]})`, fontWeight: 600 }}>{m[1] + (m[2] ?? "")}</span>
+            <span style={{ fontWeight: 600, color: "var(--ink)" }}>{m[3]}</span>
+          </>
+        ) : (
+          line
+        ),
+        key: `d${i}`,
+      });
+    });
+    lines.push({ out: "", key: "blank" });
+    lines.push({
+      out: (
+        <>
+          <span style={{ color: "var(--error)", fontWeight: 600 }}>error</span>
+          <span style={{ fontWeight: 600, color: "var(--ink)" }}>: aborting due to 1 previous error</span>
+        </>
+      ),
+      key: "abort",
+    });
+  }
+  lines.push({ cmd: "wowlua test", comment: "in the emulated client, per flavor" });
+  for (const f of ["standard, 0.04s", "camelot, 0.05s", "vanilla, 0.03s"]) {
+    lines.push({
+      out: (
+        <>
+          {" "}
+          <span className="wl-term__ok">PASS</span> tests/main.test.wowlua ({f})
+        </>
+      ),
+      key: `p${f}`,
+    });
+    lines.push({
+      out: (
+        <>
+          {"   "}
+          <span className="wl-term__ok">✓</span> greets at login
+        </>
+      ),
+      key: `t${f}`,
+    });
+  }
+  lines.push({
+    out: (
+      <>
+        {"      "}
+        <span className="wl-term__ok">Tested</span> 3 passed, 0 failed, 0 skipped (3 files) in 0.32s
+      </>
+    ),
+    key: "tested",
+  });
+  lines.push({ cmd: "wowlua build --release", comment: "bundled and minified" });
+  lines.push({
+    out: (
+      <>
+        {"    "}
+        <span className="wl-term__ok">Finished</span> TypedDemo 0.1.0-alpha (release: standard, camelot, vanilla) in 0.09s → dist/release/TypedDemo
+      </>
+    ),
+    key: "finished",
+  });
+  lines.push({ cmd: "wowlua publish", comment: "CurseForge, Wago, WoWInterface, GitHub Releases" });
+  return lines;
+}
+
+/** The session as one wide transcript, comments aligned beside the commands. */
+function Terminal({ diagnostic }: { diagnostic: string }) {
+  const lines = termLines(diagnostic);
   return (
-    <figure className="wl-term" style={{ margin: "24px 0 0" }}>
+    <figure className="wl-term landing-term--wide" style={{ margin: "24px 0 0" }}>
       <div className="wl-term__bar">
         <span>~/TypedDemo</span>
         <span>zsh</span>
       </div>
       <pre className="wl-term__body" style={{ fontSize: 14, lineHeight: "24px", padding: "20px 24px" }}>
-        {cmd("wowlua new TypedDemo --flavors standard,camelot,vanilla", "wowlua.json, src/, tests/")}
-        {out(
-          <>
-            {"     "}
-            <span className="wl-term__ok">Created</span> addon package in TypedDemo
-          </>,
-          "created",
+        {lines.map((l, i) => {
+          const last = i === lines.length - 1;
+          if ("out" in l)
+            return (
+              <span className="wl-term__out" key={l.key}>
+                {l.out}
+                {"\n"}
+              </span>
+            );
+          return (
+            <span key={l.cmd}>
+              <span className="wl-term__prompt">$</span> <span className="wl-term__cmd">{l.cmd}</span>
+              {l.comment && (
+                <>
+                  {" ".repeat(Math.max(2, 40 - l.cmd.length))}
+                  <span className="wl-term__comment"># {l.comment}</span>
+                </>
+              )}
+              {last ? <span className="wl-caret" aria-hidden="true" /> : "\n"}
+            </span>
+          );
+        })}
+      </pre>
+    </figure>
+  );
+}
+
+/** The same session for a phone: comments above their commands, long lines wrap with a hanging indent. */
+function PhoneTerminal({ diagnostic }: { diagnostic: string }) {
+  const lines = termLines(diagnostic);
+  return (
+    <figure className="wl-term landing-term--phone" style={{ margin: 0 }}>
+      <div className="wl-term__bar">
+        <span>~/TypedDemo</span>
+        <span>zsh</span>
+      </div>
+      <pre className="wl-term__body">
+        {lines.map((l, i) =>
+          "out" in l ? (
+            <span className="landing-term__line wl-term__out" key={l.key}>
+              {l.out === "" ? " " : l.out}
+            </span>
+          ) : (
+            <span key={l.cmd}>
+              {l.comment && <span className="landing-term__line wl-term__comment"># {l.comment}</span>}
+              <span className="landing-term__line">
+                <span className="wl-term__prompt">$</span> <span className="wl-term__cmd">{l.cmd}</span>
+                {i === lines.length - 1 && <span className="wl-caret" aria-hidden="true" />}
+              </span>
+            </span>
+          ),
         )}
-        {diag.length > 0 && (
-          <>
-            {cmd("cd TypedDemo && wowlua check", "")}
-            {diag.map((line, i) => {
-              const m = /^(error|warning)(\[[A-Z]\d{4}\])?(:.*)$/.exec(line);
-              return out(
-                m ? (
-                  <>
-                    <span style={{ color: `var(--${m[1]})`, fontWeight: 600 }}>{m[1] + (m[2] ?? "")}</span>
-                    <span style={{ fontWeight: 600, color: "var(--ink)" }}>{m[3]}</span>
-                  </>
-                ) : (
-                  line
-                ),
-                `d${i}`,
-              );
-            })}
-            {out("", "blank")}
-            {out(
-              <>
-                <span style={{ color: "var(--error)", fontWeight: 600 }}>error</span>
-                <span style={{ fontWeight: 600, color: "var(--ink)" }}>: aborting due to 1 previous error</span>
-              </>,
-              "abort",
-            )}
-          </>
-        )}
-        {cmd("wowlua test", "in the emulated client, per flavor")}
-        {["standard, 0.04s", "camelot, 0.05s", "vanilla, 0.03s"].map((f) => (
-          <span key={f}>
-            {out(
-              <>
-                {" "}
-                <span className="wl-term__ok">PASS</span> tests/main.test.wowlua ({f})
-              </>,
-              `p${f}`,
-            )}
-            {out(
-              <>
-                {"   "}
-                <span className="wl-term__ok">✓</span> greets at login
-              </>,
-              `t${f}`,
-            )}
-          </span>
-        ))}
-        {out(
-          <>
-            {"      "}
-            <span className="wl-term__ok">Tested</span> 3 passed, 0 failed, 0 skipped (3 files) in 0.32s
-          </>,
-          "tested",
-        )}
-        {cmd("wowlua build --release", "bundled and minified")}
-        {out(
-          <>
-            {"    "}
-            <span className="wl-term__ok">Finished</span> TypedDemo 0.1.0-alpha (release: standard, camelot, vanilla) in 0.09s → dist/release/TypedDemo
-          </>,
-          "finished",
-        )}
-        <span className="wl-term__prompt">$</span> <span className="wl-term__cmd">wowlua publish</span>
-        {" ".repeat(26)}
-        <span className="wl-term__comment"># CurseForge, Wago, WoWInterface, GitHub Releases</span>
-        <span className="wl-caret" aria-hidden="true" />
       </pre>
     </figure>
   );
@@ -162,7 +212,7 @@ export default function Home() {
   const adoptHref = docsLink("adopting-an-addon");
 
   return (
-    <main id="main">
+    <main id="main" className="landing">
       <JsonLd
         data={[
           { "@context": "https://schema.org", "@type": "WebSite", name: "wowlua", url: SITE },
@@ -182,28 +232,29 @@ export default function Home() {
           },
         ]}
       />
-      <section className="landing-section" style={{ paddingTop: 88, gap: 28 }} aria-labelledby="hero">
-        <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-muted)" }}>
+      <section className="landing-section landing-hero" style={{ paddingTop: 88, gap: 28 }} aria-labelledby="hero">
+        <p className="landing-hero__meta" style={{ margin: 0, fontSize: 12.5, color: "var(--ink-muted)" }}>
           {latest && <span style={{ color: "var(--amber-ink)", fontWeight: 600 }}>v{shortVersion(latest.tag)}</span>}
-          {latest ? " · " : ""}a strict superset of Lua 5.1 · macOS, Linux, Windows · MIT licence
+          {latest ? " · " : ""}a strict superset of Lua 5.1<span className="landing-hero__sep"> · </span>
+          <span className="landing-hero__os">macOS, Linux, Windows · MIT licence</span>
         </p>
-        <h1 id="hero" className="display-xl" style={{ margin: 0, maxWidth: "18ch" }}>
+        <h1 id="hero" className="display-xl landing-hero__title" style={{ margin: 0, maxWidth: "18ch" }}>
           Typed Lua for World of Warcraft AddOns
           <span className="wl-caret" aria-hidden="true" />
         </h1>
         <p
-          className="body-l"
+          className="body-l landing-hero__intro"
           style={{ margin: 0, maxWidth: "62ch", color: "var(--ink-muted)" }}
           dangerouslySetInnerHTML={{ __html: inlineMd(intro().replace(/^\*\*wowlua\*\* is /, "wowlua is ")) }}
         />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+        <div className="landing-hero__actions" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
           <Link className="wl-btn wl-btn--primary" href={startHref}>
             start a new addon
           </Link>
           <Link className="wl-btn wl-btn--secondary" href={adoptHref}>
             bring your addon
           </Link>
-          <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>
+          <span className="landing-hero__or" style={{ fontSize: 12, color: "var(--ink-muted)" }}>
             or read the <Link href="/docs/spec/language/syntax">language reference</Link>
           </span>
         </div>
@@ -228,6 +279,7 @@ export default function Home() {
         )}
 
         <Terminal diagnostic={t.output} />
+        <PhoneTerminal diagnostic={t.output} />
       </section>
 
       <section className="landing-section" style={{ gap: 32 }} aria-labelledby="paths">
@@ -239,7 +291,7 @@ export default function Home() {
             Start from an empty folder, or point wowlua at the addon you already ship. Both end in the same place: a checked, complete AddOn.
           </p>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+        <div className="landing-cards" style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
           <article className="landing-card">
             <span className="label" style={{ color: "var(--amber-ink)" }}>
               [ start new ]
@@ -252,7 +304,7 @@ export default function Home() {
               syncs into your AddOns folders.
             </p>
             <CopyCmd command="wowlua new MyAddon --flavors standard,mists,vanilla" />
-            <Link href={startHref} style={{ fontSize: 13 }}>
+            <Link className="landing-card__more" href={startHref} style={{ fontSize: 13 }}>
               follow the getting started guide →
             </Link>
           </article>
@@ -265,7 +317,7 @@ export default function Home() {
             </h3>
             <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }} dangerouslySetInnerHTML={{ __html: inlineMd(bringYourAddon()) }} />
             <CopyCmd command="wowlua init --from-pkgmeta" />
-            <Link href={adoptHref} style={{ fontSize: 13 }}>
+            <Link className="landing-card__more" href={adoptHref} style={{ fontSize: 13 }}>
               read the adoption guide →
             </Link>
           </article>
@@ -287,7 +339,7 @@ export default function Home() {
               <span className="wl-code__file">src/util.wowlua</span>
               <span className="wl-code__lang">wowlua</span>
             </div>
-            <pre className="wl-code__pre">
+            <pre className="wl-code__pre m-wrap">
               <code dangerouslySetInnerHTML={{ __html: highlight(CLAMP_SRC, "wowlua") }} />
             </pre>
           </figure>
@@ -299,7 +351,7 @@ export default function Home() {
               <span className="wl-code__file">emitted</span>
               <span className="wl-code__lang">lua 5.1</span>
             </div>
-            <pre className="wl-code__pre">
+            <pre className="wl-code__pre m-wrap">
               <code dangerouslySetInnerHTML={{ __html: highlight(CLAMP_OUT, "lua") }} />
             </pre>
           </figure>
@@ -325,10 +377,17 @@ export default function Home() {
             );
           })}
         </ul>
+        <FeatureAccordion
+          items={tools().map((tool) => {
+            const key = tool.label.toLowerCase();
+            const extra = FEATURES[key];
+            return { tag: key, title: extra?.title, body: inlineMd(tool.text), code: extra?.code };
+          })}
+        />
       </section>
 
-      <section className="landing-section landing-section--split" aria-labelledby="dev">
-        <div style={{ flex: "1 1 340px", minWidth: 0, display: "grid", gap: 14 }}>
+      <section className="landing-section landing-section--split landing-dev" aria-labelledby="dev">
+        <div className="landing-dev__text" style={{ flex: "1 1 340px", minWidth: 0, display: "grid", gap: 14 }}>
           <span className="label" style={{ color: "var(--amber-ink)" }}>
             [ in game ]
           </span>
@@ -338,7 +397,7 @@ export default function Home() {
           <p style={{ margin: 0, color: "var(--ink-muted)" }}>
             Dev builds carry debugging tools without any change to your code, and release builds contain none of it. Type <code>/wl</code>.
           </p>
-          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6, fontSize: 13 }}>
+          <ul className="landing-dev__list" style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6, fontSize: 13 }}>
             {debugging().map((d) => (
               <li key={d}>
                 <span style={{ color: "var(--amber-ink)" }}>→</span> <span dangerouslySetInnerHTML={{ __html: inlineMd(d) }} />
@@ -349,11 +408,11 @@ export default function Home() {
         <DevWindowMock />
       </section>
 
-      <section className="landing-section" style={{ paddingBottom: 96, gap: 24 }} aria-labelledby="open">
+      <section className="landing-section landing-open" style={{ paddingBottom: 96, gap: 24 }} aria-labelledby="open">
         <h2 id="open" className="heading-1" style={{ margin: 0 }}>
           Built in the open
         </h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+        <div className="landing-links" style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
           <a className="landing-link" href={REPO_URL()}>
             <span className="heading-3">github ↗</span>
             <span className="body-s" style={{ color: "var(--ink-muted)" }}>
