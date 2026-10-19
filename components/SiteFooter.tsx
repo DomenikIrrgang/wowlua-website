@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { REPO_URL, findPage } from "@/lib/content";
+import { DISCORD_URL, REPO_URL, findPage } from "@/lib/content";
 import { LogoMark } from "./Logo";
 
 type L = { label: string; href: string };
@@ -23,6 +23,7 @@ export function SiteFooter() {
   ];
   const project: L[] = [
     { label: "github ↗", href: REPO_URL() },
+    { label: "discord ↗", href: DISCORD_URL },
     { label: "community", href: "/community" },
     { label: "roadmap", href: "/roadmap" },
     { label: "changelog", href: "/changelog" },
