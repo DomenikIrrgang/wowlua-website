@@ -87,7 +87,7 @@ export async function ogCard(path: string): Promise<Card | null> {
     const version = isVersion(segs[0] ?? "") ? segs[0] : "main";
     const slug = version === "main" ? segs : segs.slice(1);
     const page = findPage(version, slug);
-    const tag = version === "main" ? "docs for main" : `docs for v${version}`;
+    const tag = version === "main" ? "docs for main" : `docs for ${versions().find((v) => v.id === version)!.ref}`;
     if (!page) return { eyebrow: "docs", title: "wowlua documentation", tag };
     const r = await renderRepoFile(version, page.repoPath);
     const section = sidebar(version).find((s) => s.items.some((i) => i.repoPath === page.repoPath))?.title;

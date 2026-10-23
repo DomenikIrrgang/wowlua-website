@@ -62,7 +62,7 @@ const searchTitle = (title: string) => title.replace(/^(Appendix [A-Z]\.|[\d.]+)
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { version, page, rendered } = await load(params);
   const title = searchTitle(rendered.title ?? "docs");
-  const full = version === "main" ? title : `${title} (v${version})`;
+  const full = version === "main" ? title : `${title} (${refOf(version).ref})`;
   return {
     ...ogMetadata(docsHref(version, page.slug), full, rendered.description || undefined),
     title: full,
@@ -115,8 +115,8 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
           <Banner kind={version === latestId ? "note" : "warning"} label={version === latestId ? "latest release:" : "old version:"}>
             <span style={{ flex: "1 1 260px" }}>
               {version === latestId
-                ? `You're reading the docs for v${version}, the latest release. The default docs follow main, which has unreleased changes.`
-                : `You're reading the docs for v${version}.${latestId ? ` The latest release is v${latestId}.` : ""}`}
+                ? `You're reading the docs for ${ref.ref}, the latest release. The default docs follow main, which has unreleased changes.`
+                : `You're reading the docs for ${ref.ref}.${latest ? ` The latest release is ${latest.tag}.` : ""}`}
             </span>
             <Link href={docsHref("main", page.slug)} style={{ fontWeight: 600 }}>
               go to main →
@@ -134,8 +134,8 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
           <h1 className="heading-1">{rendered.title}</h1>
           <div className="docs__meta caption">
             <span>
-              {version === "main" ? `main · ${ref.sha?.slice(0, 7) ?? ""}` : `v${version} · ${ref.ref}`}
-              {version === "main" && latestId ? ` · latest release v${latestId}` : ""}
+              {version === "main" ? `main · ${ref.sha?.slice(0, 7) ?? ""}` : ref.ref}
+              {version === "main" && latest ? ` · latest release ${latest.tag}` : ""}
             </span>
             <a href={githubUrl(version, page.repoPath)}>source on GitHub ↗</a>
           </div>
@@ -146,7 +146,7 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
         {areas.length > 0 && <DiagnosticsBrowser areas={areas} />}
         <PageNav prev={prev} next={next} />
         <p className="docs__source caption">
-          <span>{version === "main" ? `main · ${ref.sha?.slice(0, 7) ?? ""}` : `v${version} · ${ref.ref}`}</span>
+          <span>{version === "main" ? `main · ${ref.sha?.slice(0, 7) ?? ""}` : ref.ref}</span>
           <a href={githubUrl(version, page.repoPath)}>source on GitHub ↗</a>
         </p>
       </main>
