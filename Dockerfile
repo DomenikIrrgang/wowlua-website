@@ -29,11 +29,14 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0
 
 # The standalone output carries its own minimal node_modules and server.js;
-# static assets and public/ are copied next to it. Every page is prerendered,
-# so the content cache is not needed at run time.
+# static assets and public/ are copied next to it. The content fetched at build
+# time is where the server starts; it then keeps it up to date from GitHub
+# (instrumentation.ts), regenerating pages as wowlua changes. Owned by node so
+# the server can write new content and regenerated pages.
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+COPY --from=build --chown=node:node /app/content ./content
 
 USER node
 EXPOSE 3000

@@ -1,18 +1,13 @@
 name: Deploy
 
-# The site renders wowlua's docs as they are on GitHub at build time, so it is
-# rebuilt when this repository changes and when wowlua does:
+# Deploys changes to this repository. wowlua changes need no deploy: the
+# running site checks GitHub every few minutes and regenerates its pages from
+# the new docs (instrumentation.ts).
 #   - push to main here
-#   - repository_dispatch "wowlua-updated", sent by wowlua's CI (optional)
-#   - an hourly schedule (skips the build when neither repository changed)
 #   - by hand (workflow_dispatch)
 on:
   push:
     branches: [main]
-  repository_dispatch:
-    types: [wowlua-updated]
-  schedule:
-    - cron: "17 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -40,7 +35,8 @@ jobs:
         with:
           persist-credentials: false
 
-      # One image per site commit and wowlua commit: an unchanged pair is not rebuilt.
+      # The tag also names the wowlua commit and release the image starts from
+      # (the server updates its content after that). A rerun of a deployed tag is skipped.
       - name: Resolve versions
         id: v
         env:

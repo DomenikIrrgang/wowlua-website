@@ -5,6 +5,8 @@ import { diagnostics } from "@/lib/diagnostics";
 import { renderRepoFile } from "@/lib/markdown";
 
 export const dynamic = "force-static";
+// Follows wowlua content changes while the server runs (instrumentation.ts).
+export const revalidate = 60;
 
 const clean = (s: string) => s.replace(/^(Appendix [A-Z]\.|[A-Z]?\d+(\.\d+)*\.?)\s+/, "").replace(/`/g, "");
 

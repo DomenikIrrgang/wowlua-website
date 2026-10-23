@@ -2,6 +2,8 @@ import { escapeHtml } from "@/lib/highlight";
 import { feedItems } from "@/lib/feed";
 
 export const dynamic = "force-static";
+// Follows wowlua content changes while the server runs (instrumentation.ts).
+export const revalidate = 60;
 
 export function GET() {
   const site = process.env.SITE_URL ?? "http://localhost:3000";

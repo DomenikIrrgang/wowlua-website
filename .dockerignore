@@ -2,6 +2,7 @@
 .next
 node_modules
 content/.cache
-content/.cache.next
+content/.cache.*
+content/.store
 *.tsbuildinfo
 .env*

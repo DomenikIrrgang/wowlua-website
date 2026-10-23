@@ -3,7 +3,6 @@
 import { blogPosts, findPost } from "./blog";
 import { docsHref, findPage, isVersion, latestRelease, pages, sidebar, versions } from "./content";
 import { diagnostics, findDiagnostic } from "./diagnostics";
-import { shortVersion } from "./format";
 import { renderRepoFile } from "./markdown";
 import type { Card } from "./og";
 import { intro } from "./readme";
@@ -19,7 +18,7 @@ const STATIC: Record<string, () => Card> = {
       eyebrow: "a strict superset of Lua 5.1",
       title: "Typed Lua for World of Warcraft AddOns",
       subtitle: plain(intro()).replace(/^wowlua is /, "").replace(/^./, (c) => c.toUpperCase()).split(". ")[0] + ".",
-      tag: latest ? `v${shortVersion(latest.tag)} · latest release` : undefined,
+      tag: latest ? `${latest.tag} · latest release` : undefined,
     };
   },
   "/changelog": () => {
@@ -28,7 +27,7 @@ const STATIC: Record<string, () => Card> = {
       eyebrow: "changelog",
       title: "Every release of wowlua",
       subtitle: latest ? `Latest: ${latest.tag}, ${latest.date.slice(0, 10)}. And what is on main but not released yet.` : undefined,
-      tag: latest ? `v${shortVersion(latest.tag)} · latest release` : undefined,
+      tag: latest ? `${latest.tag} · latest release` : undefined,
     };
   },
   "/roadmap": () => {

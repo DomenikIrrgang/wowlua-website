@@ -4,7 +4,6 @@ import { FeatureAccordion } from "@/components/landing/FeatureAccordion";
 import { InstallTabs } from "@/components/landing/InstallTabs";
 import { JsonLd, SITE } from "@/components/JsonLd";
 import { REPO_URL, findPage, latestRelease } from "@/lib/content";
-import { shortVersion } from "@/lib/format";
 import { highlight } from "@/lib/highlight";
 import { inlineMd } from "@/lib/inline";
 import { bringYourAddon, debugging, installCommands, intro, taste, tools } from "@/lib/readme";
@@ -234,7 +233,7 @@ export default function Home() {
       />
       <section className="landing-section landing-hero" style={{ paddingTop: 88, gap: 28 }} aria-labelledby="hero">
         <p className="landing-hero__meta" style={{ margin: 0, fontSize: 12.5, color: "var(--ink-muted)" }}>
-          {latest && <span style={{ color: "var(--amber-ink)", fontWeight: 600 }}>v{shortVersion(latest.tag)}</span>}
+          {latest && <span style={{ color: "var(--amber-ink)", fontWeight: 600 }}>{latest.tag}</span>}
           {latest ? " · " : ""}a strict superset of Lua 5.1<span className="landing-hero__sep"> · </span>
           <span className="landing-hero__os">macOS, Linux, Windows · MIT licence</span>
         </p>

@@ -15,8 +15,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
 import { DISCORD_URL, REPO_URL, latestRelease } from "@/lib/content";
-import { shortVersion } from "@/lib/format";
 import { ogMetadata } from "@/lib/og";
+
+// wowlua's content changes while the server runs (instrumentation.ts): pages
+// are regenerated from it in the background, at most once a minute.
+export const revalidate = 60;
 
 const martian = localFont({
   src: [
@@ -64,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <div className="site">
-          <SiteHeader version={latest ? `v${shortVersion(latest.tag)}` : null} repoUrl={REPO_URL()} discordUrl={DISCORD_URL} />
+          <SiteHeader version={latest?.tag ?? null} repoUrl={REPO_URL()} discordUrl={DISCORD_URL} />
           {children}
           <SiteFooter />
         </div>
