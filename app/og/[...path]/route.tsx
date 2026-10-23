@@ -2,9 +2,11 @@ import { renderCard } from "@/lib/og";
 import { ogCard, ogPaths } from "@/lib/og-cards";
 
 // Every card is rendered at build time: /og/image.png for the home page,
-// /og/<page path>/image.png for the others.
+// /og/<page path>/image.png for the others. Cards for pages added to wowlua
+// later render on first request; all of them follow content changes.
 export const dynamic = "force-static";
-export const dynamicParams = false;
+export const dynamicParams = true;
+export const revalidate = 60;
 
 type Params = { path: string[] };
 

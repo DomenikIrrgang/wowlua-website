@@ -10,7 +10,7 @@ export function DocsSidebar({ version, current, title }: { version: string; curr
   const latestId = latest ? shortVersion(latest.tag) : null;
   const options: VersionOption[] = versions().map((v) => ({
     id: v.id,
-    label: v.id === "main" ? "main · unreleased" : v.id === latestId ? `v${v.id} · latest release` : `v${v.id}`,
+    label: v.id === "main" ? "main · unreleased" : v.id === latestId ? `${v.ref} · latest release` : v.ref,
     caption: isoDay(v.date),
   }));
   const sections = sidebar(version);

@@ -5,8 +5,10 @@ manager for World of Warcraft AddOns. Next.js (App Router), every page prerender
 
 ## Where the content comes from
 
-The wowlua repository is the source of truth. The site renders its files as they are on GitHub when the site is
-built, so most changes to wowlua need no change here.
+The wowlua repository is the source of truth. The site renders its files as they are on GitHub, and the running site
+keeps up with them: every 5 minutes it checks whether wowlua's main or its releases changed, downloads the new content,
+and regenerates its pages from it (at most once a minute per page, on the next visit). A wowlua release or docs change
+needs no change, build or deploy here; new docs versions, pages and diagnostic codes appear on their own.
 
 | On the site | From the wowlua repository |
 | --- | --- |
@@ -43,12 +45,17 @@ npm run build          # fetch, then prerender every page
 ```
 
 `scripts/fetch-content.mjs` downloads `README.md`, `CHANGELOG.md`, `docs/`, `spec/` and `examples/` of each docs
-version into `content/.cache/` (not committed), plus the releases and the commits since the last one. Environment:
+version, plus the releases and the commits since the last one (`scripts/content-sync.mjs`). Each download is a snapshot
+in `content/.store/`; `content/.cache` points at the current one (neither is committed). The production server runs the
+same sync on its own (`instrumentation.ts`). Environment:
 
 - `WOWLUA_LOCAL=../wowlua`: read main from a local checkout's working tree, to preview docs before pushing them.
 - `WOWLUA_OFFLINE=1`: build from the existing cache without the network.
 - `WOWLUA_REPO=owner/name`: another wowlua repository (a fork).
-- `GITHUB_TOKEN`: raises the GitHub API rate limit (60 requests an hour without one; a fetch makes three).
+- `GITHUB_TOKEN`: raises the GitHub API rate limit (60 requests an hour without one; a check makes two, a download
+  three).
+- `WOWLUA_REFRESH_MINUTES`: how often the running server checks for wowlua changes (default 5 in production, off in
+  `next dev`; `0` turns it off).
 
 ## Deploy
 
@@ -56,10 +63,9 @@ https://wowlua.dev runs on the `suuui` droplet next to suuui.dev, as its own Com
 Traefik from the suuui stack terminates TLS and reaches the app over the `suuui_web` network as `wowlua-app`.
 
 `.github/workflows/deploy.yml` builds the image, pushes it to `registry.digitalocean.com/suuui/wowlua-website`, and
-deploys it over SSH with a key that can only run `wowlua-deploy <tag>`. It runs on pushes to `main`, by hand, on a
-`repository_dispatch` of type `wowlua-updated`, and every hour. The image tag names the site commit, wowlua's main
-commit and its latest release, so the hourly run skips the build when nothing changed: wowlua changes reach the site
-within the hour.
+deploys it over SSH with a key that can only run `wowlua-deploy <tag>`. It runs on pushes to `main` and by hand.
+wowlua changes need no deploy: the image starts from the content fetched when it was built and the server takes it
+from there. The image tag names the site commit, and wowlua's main commit and latest release at build time.
 
 | Path in repo | On the droplet |
 | --- | --- |

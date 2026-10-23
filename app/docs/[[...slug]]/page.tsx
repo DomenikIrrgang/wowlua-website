@@ -24,7 +24,8 @@ import { shortVersion } from "@/lib/format";
 import { renderRepoFile } from "@/lib/markdown";
 import { ogMetadata } from "@/lib/og";
 
-export const dynamicParams = false;
+// Versions and pages added to wowlua after the build render on first visit.
+export const dynamicParams = true;
 
 type Params = { slug?: string[] };
 

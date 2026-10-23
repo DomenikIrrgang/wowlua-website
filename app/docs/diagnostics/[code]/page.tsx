@@ -9,7 +9,8 @@ import { diagnostics, findDiagnostic, mentions } from "@/lib/diagnostics";
 import { inlineMd } from "@/lib/inline";
 import { ogMetadata } from "@/lib/og";
 
-export const dynamicParams = false;
+// Codes added to wowlua after the build render on first visit.
+export const dynamicParams = true;
 
 const APPENDIX = "spec/appendix/diagnostics.md";
 

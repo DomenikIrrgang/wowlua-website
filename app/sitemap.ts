@@ -3,6 +3,9 @@ import { blogPosts } from "@/lib/blog";
 import { docsHref, latestRelease, pages, refOf } from "@/lib/content";
 import { diagnostics } from "@/lib/diagnostics";
 
+// Follows wowlua content changes while the server runs (instrumentation.ts).
+export const revalidate = 60;
+
 const SITE = process.env.SITE_URL ?? "http://localhost:3000";
 
 // The docs for main, the diagnostic codes, the blog and the site's pages.
