@@ -34,6 +34,8 @@ export const unreleased = cache((): Unreleased => readJson<Unreleased>("unreleas
 export const REPO_URL = () => `https://github.com/${meta().repo}`;
 /** The wowlua Discord server's permanent invite (made by github.com/DomenikIrrgang/wowlua-bot). */
 export const DISCORD_URL = "https://discord.gg/Dn795czPYk";
+/** The wowlua extension on the Visual Studio Marketplace. */
+export const VSCODE_URL = "https://marketplace.visualstudio.com/items?itemName=wowlua.wowlua";
 
 /** Docs versions: "main" first, then one per minor line, newest first. Releases from before
  *  docs/README.md had sections are left out: their docs are the specification. */

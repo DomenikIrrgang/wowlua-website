@@ -4,7 +4,7 @@ import { DevWindowMock } from "@/components/landing/DevWindowMock";
 import { EditorMock } from "@/components/landing/EditorMock";
 import { Terminal, type TermLine } from "@/components/landing/Terminal";
 import { JsonLd, SITE } from "@/components/JsonLd";
-import { DISCORD_URL, REPO_URL, findPage, latestRelease } from "@/lib/content";
+import { DISCORD_URL, REPO_URL, VSCODE_URL, findPage, latestRelease } from "@/lib/content";
 import { highlight } from "@/lib/highlight";
 import { inlineMd } from "@/lib/inline";
 import { adoptionChecked, bringYourAddon, debugging, installCommands, intro, quickStart, stdlibModules } from "@/lib/readme";
@@ -377,7 +377,7 @@ export default function Home() {
             </h2>
           </div>
           <p className="body" style={{ flex: "1 1 420px", minWidth: 0, margin: 0, color: "var(--ink-muted)" }}>
-            The wowlua extension runs your addon in an emulated WoW client and shows the UI beside your code, drawn with your own installation&apos;s textures and fonts. Set
+            The <a href={VSCODE_URL}>wowlua extension</a> runs your addon in an emulated WoW client and shows the UI beside your code, drawn with your own installation&apos;s textures and fonts. Set
             a breakpoint on <code className="wl-icode">PLAYER_LOGIN</code> or a button&apos;s <code className="wl-icode">OnClick</code>, click in the picture, and step through
             what happens.
           </p>
@@ -419,7 +419,12 @@ export default function Home() {
             <p className="body-s">Run or debug a single test with a click, and see which lines your tests covered.</p>
           </li>
         </ul>
-        <More href={docsLink("guide/vscode")}>set up VS Code</More>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 32px" }}>
+          <a className="landing-more" href={VSCODE_URL}>
+            get the extension ↗
+          </a>
+          <More href={docsLink("guide/vscode")}>set up VS Code</More>
+        </div>
       </section>
 
       <section className="landing-sec landing-row" aria-labelledby="test">
