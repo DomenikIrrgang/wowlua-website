@@ -28,10 +28,6 @@
   .pg-results { min-height: 420px; }
   .pg-tabs { padding: 0 4px; }
   .pg-tab { padding: 0 12px; }
-  .pg-cap--game .pg-cap__text { flex-basis: 100%; }
-  .pg-game { min-height: 0; }
-  .pg-game__screen { flex: none; aspect-ratio: 16 / 9; container-type: inline-size; }
-  .pg-canvas { width: 100%; }
   .pg-status { padding: 8px 16px; }
 
   /* Packages: the registry is not live, so no search, filters or listings; the head, the note and the sources. */

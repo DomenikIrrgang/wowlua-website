@@ -34,7 +34,7 @@ const STATIC: Record<string, () => Card> = {
   "/showcase": () => ({ eyebrow: "showcase", title: "AddOns built with wowlua" }),
   "/badge": () => ({ eyebrow: "badge", title: "Built with wowlua", subtitle: "A badge for your addon's website, README, CurseForge or WoWInterface page." }),
   "/community": () => ({ eyebrow: "community", title: "Built in the open", subtitle: "MIT-licensed and developed on GitHub." }),
-  "/playground": () => ({ eyebrow: "playground", title: "wowlua in the browser", subtitle: "Write wowlua, see the Lua it compiles to and run it in the game with Blizzard's UI." }),
+  "/playground": () => ({ eyebrow: "playground", title: "wowlua in the browser", subtitle: "Write wowlua and see the Lua it compiles to, its problems and what it prints." }),
 };
 
 /** Every page that has a card. */

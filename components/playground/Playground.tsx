@@ -1,39 +1,23 @@
 "use client";
 
 // The playground (the "Playground" artboard of the wowlua.dev design): main.wowlua in an editor, and what wowlua makes
-// of it in four tabs: the compiled Lua, the problems, what a run printed, and the addon running in the game with
-// Blizzard's UI. wowlua runs in Web Workers (@wowlua/web); the editor and the workers load after the page, from this
-// route only (editor.ts, wowlua.ts).
+// of it in three tabs: the compiled Lua, the problems and what a run printed. wowlua runs in a Web Worker
+// (@wowlua/web); the editor and the worker load after the page, from this route only (editor.ts, wowlua.ts).
 import type { Built, Connection, Diagnostic, Output, RunSettings, Started } from "@wowlua/web/client";
 import { useEffect, useRef, useState } from "react";
 import { diagHtml } from "@/lib/diag";
 import type { Example } from "@/lib/playground";
-import { type Opened, type Source, remember, remembered } from "./installation";
 import { diagnosticText } from "./problems";
 import { DEFAULT_SETTINGS, MINIFY, PROFILE, type Settings, buildDefaults, manifestText, settingsOf } from "./settings";
 import { highlightLines } from "./tokens";
 
-type Tab = "lua" | "problems" | "output" | "game";
+type Tab = "lua" | "problems" | "output";
 type Problems = { html: string; errors: number; warnings: number };
 type Lua = { file: string; html: string; failed: number };
 type Ran = { running: boolean; html: string; ms?: number };
-/** The user's WoW installation for the game tab (installation.ts). */
-type Install =
-  | { state: "none" | "reading" }
-  | { state: "using"; opened: Opened }
-  | { state: "failed"; message: string };
-
-type Game = {
-  phase: "idle" | "loading" | "ui" | "starting" | "running" | "stopped" | "failed";
-  done: number;
-  total: number;
-  backend?: string;
-  message?: string;
-};
-
 const MAIN = "src/main.wowlua";
 const MANIFEST_URI = "file:///playground/wowlua.json";
-const TABS: Tab[] = ["lua", "problems", "output", "game"];
+const TABS: Tab[] = ["lua", "problems", "output"];
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const numbered = (lines: string[]) => lines.map((l, i) => `<span class="pg-ln">${i + 1}</span>${l}`).join("\n");
@@ -67,27 +51,6 @@ function luaCaption(s: Settings, lua: Lua | null): string {
   return `${head}: ${says.join(", ")}.${plain ? " Switch to release and a minify level to see the shipped code." : ""}`;
 }
 
-function gameCaption(g: Game): string {
-  const files = g.total ? `${g.done.toLocaleString("en")} of ${g.total.toLocaleString("en")} files` : "";
-  switch (g.phase) {
-    case "idle":
-    case "loading":
-      return "starting wowlua in your browser…";
-    case "ui":
-      return `loading Blizzard's UI${files ? ` · ${files}` : "…"}`;
-    case "starting":
-      return "starting main.wowlua…";
-    case "running":
-      return g.done < g.total
-        ? `running main.wowlua with Blizzard's UI · ${files}, the rest loads meanwhile`
-        : `running main.wowlua in the emulated client with Blizzard's UI${g.backend ? ` · drawn with ${g.backend === "Gl" ? "WebGL 2" : "WebGPU"}` : ""} · click and type in the game`;
-    case "stopped":
-      return "stopped · run starts main.wowlua again";
-    case "failed":
-      return g.message ?? "the game did not start";
-  }
-}
-
 export function Playground({ examples }: { examples: Example[] }) {
   const [exampleId, setExampleId] = useState(examples[0]?.id ?? "");
   const [fromLink, setFromLink] = useState(false);
@@ -100,22 +63,11 @@ export function Playground({ examples }: { examples: Example[] }) {
   const [problems, setProblems] = useState<Problems | null>(null);
   const [lua, setLua] = useState<Lua | null>(null);
   const [ran, setRan] = useState<Ran | null>(null);
-  const [game, setGame] = useState<Game>({ phase: "idle", done: 0, total: 0 });
   const [shared, setShared] = useState<"idle" | "copied" | "failed">("idle");
-  const [install, setInstall] = useState<Install>(() => {
-    const r = remembered();
-    return r ? { state: "using", opened: r.opened } : { state: "none" };
-  });
 
   const wowluaRef = useRef<Connection | null>(null);
   const editorRef = useRef<{ setText(text: string): void; sync(): void; destroy(): void } | null>(null);
   const hostRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameBoxRef = useRef<HTMLDivElement>(null);
-  const gameRef = useRef<Connection | null>(null);
-  const uiReadyRef = useRef(false);
-  const pendingInstallRef = useRef<Source | null>(null);
-  const folderInputRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef(examples[0]?.code ?? "");
   const templateRef = useRef("{}");
   const settingsRef = useRef(DEFAULT_SETTINGS);
@@ -203,94 +155,7 @@ export function Playground({ examples }: { examples: Example[] }) {
     }
   };
 
-  /**
-   * Draws the addon in the game: the second worker, the user's installation, Blizzard's UI, the canvas. Only once the
-   * game tab is open and the user chose their WoW folder: without it the game would draw placeholder art.
-   */
-  const openGame = async () => {
-    if (gameRef.current) return;
-    const chosen = pendingInstallRef.current ?? remembered()?.source;
-    const canvas = canvasRef.current;
-    if (!chosen || !canvas) return;
-    pendingInstallRef.current = null;
-    setGame({ phase: "loading", done: 0, total: 0 });
-    try {
-      const { startWowlua } = await import("./wowlua");
-      const conn = startWowlua();
-      gameRef.current = conn;
-      const r = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(320, Math.round(r.width * dpr));
-      canvas.height = Math.round((canvas.width * 9) / 16);
-      const backend = await conn.attachCanvas(canvas);
-      conn.onProgress((done, total) => setGame((g) => ({ ...g, done, total })));
-      setGame((g) => ({ ...g, phase: "ui", backend }));
-      if (!(await applyInstallation(chosen))) {
-        // the folder was not a WoW installation: the tab asks again
-        conn.terminate();
-        gameRef.current = null;
-        setGame({ phase: "idle", done: 0, total: 0 });
-        return;
-      }
-      await conn.call("loadBlizzardUI", { flavor: "camelot", background: true });
-      uiReadyRef.current = true;
-      await runGame();
-    } catch (e) {
-      setGame((g) => ({ ...g, phase: "failed", message: `the game did not start: ${(e as Error)?.message ?? e}` }));
-    }
-  };
-
-  const runGame = async () => {
-    const conn = gameRef.current;
-    if (!conn) return openGame();
-    setGame((g) => ({ ...g, phase: "starting", message: undefined }));
-    try {
-      await conn.call("stop").catch(() => {});
-      await conn.call("reset", { "wowlua.json": manifestText(templateRef.current, settingsRef.current), [MAIN]: codeRef.current });
-      const started: Started = await conn.call("run", { flavor: "camelot", blizzardUI: true });
-      const errors = started.diagnostics.filter((d) => d.severity === "error").length;
-      setGame((g) => ({
-        ...g,
-        phase: started.ok ? "running" : "failed",
-        message: started.ok ? undefined : started.error ? shown(started.error) : `did not build: ${plural(errors, "error")}, see problems`,
-      }));
-      if (started.ok) canvasRef.current?.focus({ preventScroll: true });
-    } catch (e) {
-      setGame((g) => ({ ...g, phase: "failed", message: String((e as Error)?.message ?? e) }));
-    }
-  };
-
-  /** Gives the game worker the user's installation (starting the game first); a run that is up starts again. */
-  const applyInstallation = async (source: Source): Promise<boolean> => {
-    const conn = gameRef.current;
-    if (!conn) {
-      pendingInstallRef.current = source;
-      setInstall({ state: "reading" });
-      await openGame();
-      return true;
-    }
-    setInstall({ state: "reading" });
-    try {
-      const opened = await conn.useInstallation(source, { flavor: "camelot" });
-      remember(source, opened);
-      setInstall({ state: "using", opened });
-      if (uiReadyRef.current) await runGame();
-      return true;
-    } catch (e) {
-      setInstall({ state: "failed", message: String((e as Error)?.message ?? e) });
-      return false;
-    }
-  };
-
-  const chooseInstallation = () => folderInputRef.current?.click();
-
-  const stopGame = async () => {
-    await gameRef.current?.call("stop").catch(() => {});
-    setGame((g) => ({ ...g, phase: "stopped" }));
-  };
-
   const run = async () => {
-    if (tabRef.current === "game") return runGame();
     select("output", false);
     return runOutput();
   };
@@ -298,7 +163,6 @@ export function Playground({ examples }: { examples: Example[] }) {
   const select = (t: Tab, autoRun = true) => {
     tabRef.current = t;
     setTab(t);
-    if (t === "game") openGame();
     if (t === "output" && autoRun && !ran) runOutput();
   };
 
@@ -321,7 +185,6 @@ export function Playground({ examples }: { examples: Example[] }) {
     setExampleId("");
     setRan(null);
     await writeManifest(s);
-    if (how.blizzardUI) select("game");
     return true;
   };
 
@@ -343,7 +206,7 @@ export function Playground({ examples }: { examples: Example[] }) {
     if (!wowlua) return;
     try {
       await flush(wowlua);
-      const fragment: string = await wowlua.call("share", { flavor: "camelot", ...(tabRef.current === "game" ? { blizzardUI: true } : {}) });
+      const fragment: string = await wowlua.call("share", { flavor: "camelot" });
       const hash = `#${fragment.replace(/^#/, "")}`;
       hashRef.current = hash;
       history.replaceState(null, "", hash);
@@ -409,33 +272,12 @@ export function Playground({ examples }: { examples: Example[] }) {
       editorRef.current = null;
       wowlua?.terminate();
       wowluaRef.current = null;
-      gameRef.current?.terminate();
-      gameRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The game's drawing size follows its box (16:9, at most twice the CSS pixels).
-  useEffect(() => {
-    const box = gameBoxRef.current;
-    const canvas = canvasRef.current;
-    if (!box || !canvas) return;
-    const observer = new ResizeObserver(() => {
-      const r = canvas.getBoundingClientRect();
-      if (!gameRef.current || r.width < 1) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.round(r.width * dpr);
-      gameRef.current.resize(w, Math.round((w * 9) / 16));
-    });
-    observer.observe(box);
-    return () => observer.disconnect();
-  }, []);
-
   const example = examples.find((e) => e.id === exampleId);
   const count = problems ? problems.errors + problems.warnings : 0;
-  const gameBusy = game.phase === "loading" || game.phase === "ui" || game.phase === "starting";
-  const using = install.state === "using" ? install.opened : null;
-  const progress = game.total ? Math.round((game.done / game.total) * 100) : 0;
 
   return (
     <main className="pg" id="main">
@@ -575,74 +417,6 @@ export function Playground({ examples }: { examples: Example[] }) {
             <pre className="code pg-code pg-log" dangerouslySetInnerHTML={{ __html: ran?.html ?? "" }} />
           </div>
 
-          <div role="tabpanel" id="pg-panel-game" aria-labelledby="pg-tab-game" aria-label="Game" className="pg-panel" hidden={tab !== "game"}>
-            <div className="caption pg-cap pg-cap--game">
-              <span className={`pg-cap__text${game.phase === "failed" ? " pg-err" : ""}`}>
-                {using ? gameCaption(game) : "the game needs your World of Warcraft folder"}
-              </span>
-              {using && game.total > 0 && game.done < game.total && (
-                <span className="pg-progress" role="progressbar" aria-label="Blizzard's UI" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
-                  <i style={{ width: `${progress}%` }} />
-                </span>
-              )}
-              {using && (
-                <button className="wl-btn wl-btn--secondary wl-btn--small pg-install" type="button" onClick={chooseInstallation}>
-                  use another folder
-                </button>
-              )}
-              {using &&
-                (game.phase === "running" ? (
-                  <button className="wl-btn wl-btn--secondary wl-btn--small" type="button" onClick={stopGame}>
-                    stop
-                  </button>
-                ) : (
-                  <button className="wl-btn wl-btn--secondary wl-btn--small" type="button" onClick={() => runGame()} disabled={gameBusy}>
-                    run
-                  </button>
-                ))}
-              {using && (
-                <span className="pg-cap__note">
-                  drawn with your installation&apos;s art: {using.product} ({using.flavor}, {using.files.toLocaleString("en")} files), read in your browser and never uploaded
-                </span>
-              )}
-            </div>
-            <div className="pg-game" ref={gameBoxRef}>
-              {!using && (
-                <div className="pg-game__ask">
-                  <h2 className="heading-3">Choose your World of Warcraft folder</h2>
-                  <p className="body-s">
-                    The game tab runs main.wowlua in wowlua&apos;s emulated client with Blizzard&apos;s UI, drawn with the art and fonts of your own installation. Choose
-                    the folder that holds <code className="wl-icode">Data</code> and the WoW Forever client, <code className="wl-icode">_classic_beta_</code>: on a Mac
-                    that is <code className="wl-icode">/Applications/World of Warcraft</code>.
-                  </p>
-                  <p className="caption">
-                    Your browser then asks whether to upload the folder&apos;s files to wowlua.dev. Nothing is uploaded: wowlua reads the files here, in this page, and
-                    only while it is open.
-                  </p>
-                  <button className="wl-btn wl-btn--primary" type="button" onClick={chooseInstallation} disabled={install.state === "reading"}>
-                    {install.state === "reading" ? "reading your installation…" : "choose your WoW folder"}
-                  </button>
-                  {install.state === "failed" && <p className="caption pg-err">{install.message}</p>}
-                </div>
-              )}
-              <div className="pg-game__screen" hidden={!using}>
-                <canvas ref={canvasRef} className="pg-canvas" aria-label="The game, with the addon running" tabIndex={0} />
-              </div>
-            </div>
-            <input
-              ref={folderInputRef}
-              type="file"
-              hidden
-              multiple
-              {...{ webkitdirectory: "" }}
-              aria-label="Your World of Warcraft folder"
-              onChange={(e) => {
-                const files = [...(e.target.files ?? [])];
-                e.target.value = "";
-                if (files.length) applyInstallation(files);
-              }}
-            />
-          </div>
         </section>
       </div>
 

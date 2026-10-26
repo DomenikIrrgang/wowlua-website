@@ -3,7 +3,7 @@ import { Playground } from "@/components/playground/Playground";
 import { ogMetadata } from "@/lib/og";
 import { playgroundExamples } from "@/lib/playground";
 
-const description = "Write wowlua in the browser: see the Lua it compiles to, its problems and what it prints, and run it in the game with Blizzard's UI.";
+const description = "Write wowlua in the browser: see the Lua it compiles to, its problems and what it prints.";
 
 export const metadata: Metadata = {
   title: "Playground",

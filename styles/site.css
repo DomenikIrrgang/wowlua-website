@@ -98,21 +98,6 @@ body { min-height: 100%; }
 .pg a, .pg-status a { color: var(--amber-ink); }
 .pg a:hover { color: var(--ink); }
 
-/* The game tab: a caption bar with the loading progress and run/stop, the game's 16:9 screen fitted to the panel */
-.pg-cap--game { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 40px; padding-block: 4px; box-sizing: border-box; }
-.pg-cap__note { flex: 1 0 100%; color: var(--ink-faint); }
-.pg-cap__text { flex: 1 1 0; min-width: 0; }
-.pg-progress { flex: 0 0 120px; height: 4px; background: var(--line); }
-.pg-progress > i { display: block; height: 4px; background: var(--amber); transition: width 200ms linear; }
-.pg-game { flex: 1; min-height: 240px; display: flex; flex-direction: column; background: var(--bg-000); }
-.pg-game__ask { max-width: 560px; margin: auto; padding: 32px 24px; display: grid; gap: 12px; justify-items: start; }
-.pg-game__ask > * { margin: 0; }
-.pg-game__ask .caption { color: var(--ink-muted); }
-.pg-game__screen[hidden] { display: none; }
-.pg-game__screen { flex: 1; min-height: 0; display: grid; place-items: center; container-type: size; }
-.pg-canvas { display: block; width: min(100cqw, 100cqh * 16 / 9); aspect-ratio: 16 / 9; background: #000; outline: none; }
-.pg-canvas:focus-visible { box-shadow: 0 0 0 2px var(--focus); }
-
 /* CodeMirror in the design's code style; colours come from the tok-* classes (tokens.ts) */
 .pg .cm-editor { height: 100%; background: var(--bg-000); color: var(--ink); font: 400 13.5px/22px var(--font-mono); }
 .pg .cm-editor.cm-focused { outline: none; }
