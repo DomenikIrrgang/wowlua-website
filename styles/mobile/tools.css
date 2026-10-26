@@ -16,14 +16,23 @@
     text-indent: 0; text-align: right; color: var(--ink-faint); user-select: none;
   }
 
-  /* Playground: the compiler does not run in the browser yet, so the page is its head and the README's sample. */
-  .tools-playground { padding: 24px 16px 48px; gap: 16px; }
-  .tools-playground .page__head { gap: 8px; }
-  .tools-playground .page__head > .label { display: none; }
-  .tools-playground .page__head h1 { font-size: 26px; line-height: 34px; letter-spacing: -0.02em; }
-  .tools-playground .page__head p { font-size: 13px; line-height: 21px; }
-  .tools-playground .page__head > div { margin-top: 8px; }
-  .tools-playground .page__head .wl-btn { flex: 1 1 0; min-width: 0; height: 48px; padding: 0 var(--space-3); justify-content: center; }
+  /* Playground: the toolbar wraps (the actions get their own row), main.wowlua and the result tabs stack. */
+  .pg { min-height: 0; }
+  .pg-bar { padding: 12px 16px; }
+  .pg-bar .pg-field { flex: 1 1 120px; }
+  .pg-bar .pg-field--example { flex-basis: 100%; }
+  .pg-actions { margin-left: 0; flex: 1 1 100%; flex-wrap: wrap; }
+  .pg-actions > .caption { margin-right: auto; }
+  .pg-src { border-right: 0; border-bottom: 1px solid var(--line); }
+  .pg-editor { min-height: 420px; }
+  .pg-results { min-height: 420px; }
+  .pg-tabs { padding: 0 4px; }
+  .pg-tab { padding: 0 12px; }
+  .pg-cap--game .pg-cap__text { flex-basis: 100%; }
+  .pg-game { min-height: 0; }
+  .pg-game__screen { flex: none; aspect-ratio: 16 / 9; container-type: inline-size; }
+  .pg-canvas { width: 100%; }
+  .pg-status { padding: 8px 16px; }
 
   /* Packages: the registry is not live, so no search, filters or listings; the head, the note and the sources. */
   .tools-packages { padding: 28px 16px 48px; gap: 20px; }

@@ -18,6 +18,7 @@ needs no change, build or deploy here; new docs versions, pages and diagnostic c
 | `/changelog` | `CHANGELOG.md` on main (GitHub release notes if it is missing), commits on main since the last release |
 | `/community` | `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` (linked when they exist), the README's Developing commands, the latest release's changelog |
 | landing page facts | `README.md`: intro, install commands, quick start, adoption count, debugging list; the module count from `docs/stdlib/overview.md` |
+| the playground's example picker | `examples/playground/*.wowlua` on main (line 1 the label, line 2 the hint; `examples/playground/README.md` there) |
 
 The specification (`spec/`) is not a part of the site: links to it go to GitHub, and the old `/docs/spec/…`, `/roadmap`
 and `/packages` addresses redirect to the nearest docs page (`next.config.ts`). wowlua's `CLAUDE.md` lists the Markdown

@@ -9,7 +9,8 @@ import { githubUrl } from "@/lib/content";
 import { type Diagnostic, diagnosticHref, diagnostics, explanationOf, explanations, findDiagnostic } from "@/lib/diagnostics";
 import { escapeHtml, highlight } from "@/lib/highlight";
 import { inlineMd } from "@/lib/inline";
-import { diagHtml, renderMarkdown } from "@/lib/markdown";
+import { diagHtml } from "@/lib/diag";
+import { renderMarkdown } from "@/lib/markdown";
 import { ogMetadata } from "@/lib/og";
 
 // Codes added to wowlua after the build render on first visit.

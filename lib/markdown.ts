@@ -16,6 +16,7 @@ import { cache } from "react";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
 import { githubUrl, hrefForRepoPath, readRepoFile } from "./content";
+import { diagHtml } from "./diag";
 import { diagnosticHref } from "./diagnostics";
 import { escapeHtml, highlight } from "./highlight";
 
@@ -184,25 +185,6 @@ function termLine(line: string): string {
     .replace(/^(\s*)(FAIL|✗|error(?:\[\w+\])?:?)(?=\s|$)/, '$1<span class="wl-term__err">$2</span>')
     .replace(/^(\s*)(PASS|✓|[A-Z][a-z]+)(?=\s)/, (m, sp, w) => (/^[A-Z][a-z]+$/.test(w) && sp.length < 2 ? m : `${sp}<span class="wl-term__ok">${w}</span>`));
   return `<span class="wl-term__out">${out}</span>`;
-}
-
-/** Compiler output, coloured as the terminal prints it. */
-export function diagHtml(text: string): string {
-  return text.split("\n").map(diagLine).join("\n");
-}
-
-/** One line of compiler output, coloured as the terminal prints it. */
-function diagLine(line: string): string {
-  const head = /^(error|warning)(\[[EWP]\d{4}\])?(:.*)$/.exec(line);
-  if (head) return `<span class="wl-diag__${head[1]}">${head[1]}${head[2] ?? ""}</span><span class="wl-diag__msg">${escapeHtml(head[3])}</span>`;
-  const gutter = /^(\s*(?:\d+\s)?(?:│|┌─|└─|╭─|╰─|\|))(.*)$/.exec(line);
-  if (gutter) {
-    const rest = escapeHtml(gutter[2]).replace(/([\^~-]{1,}.*)$/, (m) => (/^[\^~]/.test(m.trim()) ? `<span class="wl-diag__error">${m}</span>` : m));
-    return `<span class="wl-diag__gutter">${escapeHtml(gutter[1])}</span>${rest}`;
-  }
-  const help = /^(\s*=\s*)(help|note)(:.*)$/.exec(line);
-  if (help) return `${escapeHtml(help[1])}<span class="wl-diag__${help[2]}">${help[2]}</span>${escapeHtml(help[3])}`;
-  return escapeHtml(line);
 }
 
 /**
