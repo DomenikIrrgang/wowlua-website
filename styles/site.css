@@ -105,8 +105,10 @@ body { min-height: 100%; }
 .pg-progress { flex: 0 0 120px; height: 4px; background: var(--line); }
 .pg-progress > i { display: block; height: 4px; background: var(--amber); transition: width 200ms linear; }
 .pg-game { flex: 1; min-height: 240px; display: flex; flex-direction: column; background: var(--bg-000); }
-.pg-game__note { margin: 0; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--warning-soft); color: var(--ink); }
-.pg-game__note code { font: inherit; font-weight: 600; }
+.pg-game__ask { max-width: 560px; margin: auto; padding: 32px 24px; display: grid; gap: 12px; justify-items: start; }
+.pg-game__ask > * { margin: 0; }
+.pg-game__ask .caption { color: var(--ink-muted); }
+.pg-game__screen[hidden] { display: none; }
 .pg-game__screen { flex: 1; min-height: 0; display: grid; place-items: center; container-type: size; }
 .pg-canvas { display: block; width: min(100cqw, 100cqh * 16 / 9); aspect-ratio: 16 / 9; background: #000; outline: none; }
 .pg-canvas:focus-visible { box-shadow: 0 0 0 2px var(--focus); }

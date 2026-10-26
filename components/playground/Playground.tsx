@@ -8,7 +8,7 @@ import type { Built, Connection, Diagnostic, Output, RunSettings, Started } from
 import { useEffect, useRef, useState } from "react";
 import { diagHtml } from "@/lib/diag";
 import type { Example } from "@/lib/playground";
-import { type Opened, type Source, directoryPicker, grant, recall, remember, remembered } from "./installation";
+import { type Opened, type Source, remember, remembered } from "./installation";
 import { diagnosticText } from "./problems";
 import { DEFAULT_SETTINGS, MINIFY, PROFILE, type Settings, buildDefaults, manifestText, settingsOf } from "./settings";
 import { highlightLines } from "./tokens";
@@ -21,7 +21,6 @@ type Ran = { running: boolean; html: string; ms?: number };
 type Install =
   | { state: "none" | "reading" }
   | { state: "using"; opened: Opened }
-  | { state: "ask"; handle: FileSystemDirectoryHandle }
   | { state: "failed"; message: string };
 
 type Game = {
@@ -204,11 +203,16 @@ export function Playground({ examples }: { examples: Example[] }) {
     }
   };
 
-  /** Draws the addon in the game: the second worker, Blizzard's UI, the canvas. Only once the game tab is open. */
+  /**
+   * Draws the addon in the game: the second worker, the user's installation, Blizzard's UI, the canvas. Only once the
+   * game tab is open and the user chose their WoW folder: without it the game would draw placeholder art.
+   */
   const openGame = async () => {
     if (gameRef.current) return;
+    const chosen = pendingInstallRef.current ?? remembered()?.source;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!chosen || !canvas) return;
+    pendingInstallRef.current = null;
     setGame({ phase: "loading", done: 0, total: 0 });
     try {
       const { startWowlua } = await import("./wowlua");
@@ -221,14 +225,12 @@ export function Playground({ examples }: { examples: Example[] }) {
       const backend = await conn.attachCanvas(canvas);
       conn.onProgress((done, total) => setGame((g) => ({ ...g, done, total })));
       setGame((g) => ({ ...g, phase: "ui", backend }));
-      // the installation chosen earlier in this session, or while the worker started
-      const chosen = pendingInstallRef.current ?? remembered()?.source;
-      pendingInstallRef.current = null;
-      if (chosen) await applyInstallation(chosen);
-      else {
-        const earlier = await recall();
-        if (earlier?.ready) await applyInstallation(earlier.handle);
-        else if (earlier) setInstall({ state: "ask", handle: earlier.handle });
+      if (!(await applyInstallation(chosen))) {
+        // the folder was not a WoW installation: the tab asks again
+        conn.terminate();
+        gameRef.current = null;
+        setGame({ phase: "idle", done: 0, total: 0 });
+        return;
       }
       await conn.call("loadBlizzardUI", { flavor: "camelot", background: true });
       uiReadyRef.current = true;
@@ -258,12 +260,14 @@ export function Playground({ examples }: { examples: Example[] }) {
     }
   };
 
-  /** Gives the game worker the user's installation; a run that is up starts again, drawn with its art. */
-  const applyInstallation = async (source: Source) => {
+  /** Gives the game worker the user's installation (starting the game first); a run that is up starts again. */
+  const applyInstallation = async (source: Source): Promise<boolean> => {
     const conn = gameRef.current;
     if (!conn) {
       pendingInstallRef.current = source;
-      return;
+      setInstall({ state: "reading" });
+      await openGame();
+      return true;
     }
     setInstall({ state: "reading" });
     try {
@@ -271,22 +275,14 @@ export function Playground({ examples }: { examples: Example[] }) {
       remember(source, opened);
       setInstall({ state: "using", opened });
       if (uiReadyRef.current) await runGame();
+      return true;
     } catch (e) {
       setInstall({ state: "failed", message: String((e as Error)?.message ?? e) });
+      return false;
     }
   };
 
-  /** The button: the folder picker where there is one, else the folder input. */
-  const chooseInstallation = async () => {
-    try {
-      if (install.state === "ask" && (await grant(install.handle))) return applyInstallation(install.handle);
-      const picker = directoryPicker();
-      if (!picker) return folderInputRef.current?.click();
-      await applyInstallation(await picker({ id: "wow", mode: "read" }));
-    } catch (e) {
-      if ((e as DOMException)?.name !== "AbortError") setInstall({ state: "failed", message: String((e as Error)?.message ?? e) });
-    }
-  };
+  const chooseInstallation = () => folderInputRef.current?.click();
 
   const stopGame = async () => {
     await gameRef.current?.call("stop").catch(() => {});
@@ -438,14 +434,7 @@ export function Playground({ examples }: { examples: Example[] }) {
   const example = examples.find((e) => e.id === exampleId);
   const count = problems ? problems.errors + problems.warnings : 0;
   const gameBusy = game.phase === "loading" || game.phase === "ui" || game.phase === "starting";
-  const installLabel =
-    install.state === "reading" ? "reading your installation…" : install.state === "using" ? "use another installation" : install.state === "ask" ? "use your WoW installation again" : "use your WoW installation";
-  const installNote =
-    install.state === "using"
-      ? `using your installation: ${install.opened.product} (${install.opened.flavor}, ${install.opened.files.toLocaleString("en")} files), read in your browser and never uploaded`
-      : install.state === "failed"
-        ? `your installation: ${install.message}`
-        : "the game's art is read from your installation in your browser and never uploaded";
+  const using = install.state === "using" ? install.opened : null;
   const progress = game.total ? Math.round((game.done / game.total) * 100) : 0;
 
   return (
@@ -588,34 +577,55 @@ export function Playground({ examples }: { examples: Example[] }) {
 
           <div role="tabpanel" id="pg-panel-game" aria-labelledby="pg-tab-game" aria-label="Game" className="pg-panel" hidden={tab !== "game"}>
             <div className="caption pg-cap pg-cap--game">
-              <span className={`pg-cap__text${game.phase === "failed" ? " pg-err" : ""}`}>{gameCaption(game)}</span>
-              {game.total > 0 && game.done < game.total && (
+              <span className={`pg-cap__text${game.phase === "failed" ? " pg-err" : ""}`}>
+                {using ? gameCaption(game) : "the game needs your World of Warcraft folder"}
+              </span>
+              {using && game.total > 0 && game.done < game.total && (
                 <span className="pg-progress" role="progressbar" aria-label="Blizzard's UI" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
                   <i style={{ width: `${progress}%` }} />
                 </span>
               )}
-              <button className="wl-btn wl-btn--secondary wl-btn--small pg-install" type="button" onClick={chooseInstallation} disabled={install.state === "reading"}>
-                {installLabel}
-              </button>
-              {game.phase === "running" ? (
-                <button className="wl-btn wl-btn--secondary wl-btn--small" type="button" onClick={stopGame}>
-                  stop
-                </button>
-              ) : (
-                <button className="wl-btn wl-btn--secondary wl-btn--small" type="button" onClick={() => runGame()} disabled={gameBusy}>
-                  run
+              {using && (
+                <button className="wl-btn wl-btn--secondary wl-btn--small pg-install" type="button" onClick={chooseInstallation}>
+                  use another folder
                 </button>
               )}
-              <span className={`pg-cap__note${install.state === "failed" ? " pg-err" : ""}`}>{installNote}</span>
+              {using &&
+                (game.phase === "running" ? (
+                  <button className="wl-btn wl-btn--secondary wl-btn--small" type="button" onClick={stopGame}>
+                    stop
+                  </button>
+                ) : (
+                  <button className="wl-btn wl-btn--secondary wl-btn--small" type="button" onClick={() => runGame()} disabled={gameBusy}>
+                    run
+                  </button>
+                ))}
+              {using && (
+                <span className="pg-cap__note">
+                  drawn with your installation&apos;s art: {using.product} ({using.flavor}, {using.files.toLocaleString("en")} files), read in your browser and never uploaded
+                </span>
+              )}
             </div>
             <div className="pg-game" ref={gameBoxRef}>
-              {install.state !== "using" && (
-                <p className="caption pg-game__note">
-                  Without your WoW installation the game draws with placeholder textures (magenta) and stand-in fonts. Choose its folder, the one that
-                  holds <code>Data</code>, with the button above to see the game’s own art.
-                </p>
+              {!using && (
+                <div className="pg-game__ask">
+                  <h2 className="heading-3">Choose your World of Warcraft folder</h2>
+                  <p className="body-s">
+                    The game tab runs main.wowlua in wowlua&apos;s emulated client with Blizzard&apos;s UI, drawn with the art and fonts of your own installation. Choose
+                    the folder that holds <code className="wl-icode">Data</code> and the WoW Forever client, <code className="wl-icode">_classic_beta_</code>: on a Mac
+                    that is <code className="wl-icode">/Applications/World of Warcraft</code>.
+                  </p>
+                  <p className="caption">
+                    Your browser then asks whether to upload the folder&apos;s files to wowlua.dev. Nothing is uploaded: wowlua reads the files here, in this page, and
+                    only while it is open.
+                  </p>
+                  <button className="wl-btn wl-btn--primary" type="button" onClick={chooseInstallation} disabled={install.state === "reading"}>
+                    {install.state === "reading" ? "reading your installation…" : "choose your WoW folder"}
+                  </button>
+                  {install.state === "failed" && <p className="caption pg-err">{install.message}</p>}
+                </div>
               )}
-              <div className="pg-game__screen">
+              <div className="pg-game__screen" hidden={!using}>
                 <canvas ref={canvasRef} className="pg-canvas" aria-label="The game, with the addon running" tabIndex={0} />
               </div>
             </div>
