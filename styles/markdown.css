@@ -50,7 +50,7 @@
 .md .md-quote > * { margin: 0; }
 .md .wl-callout__body > * { margin: 0; }
 .md .wl-callout__body > * + * { margin-top: 8px; }
-.md img { max-width: 100%; }
+.md img { max-width: 100%; height: auto; border: 1px solid var(--line); box-shadow: var(--shadow-pop); }
 .md-wide { max-width: 960px; }
 
 /* Errors and warnings: search, severity, areas and a table per area (DiagnosticsIndex) */

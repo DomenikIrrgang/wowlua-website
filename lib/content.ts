@@ -100,6 +100,11 @@ export function hrefForRepoPath(version: string, repoPath: string): string | nul
   return docsHref(version, slug);
 }
 
+/** A repository file's raw contents at a docs version (images in the docs). */
+export function rawUrl(version: string, repoPath: string): string {
+  return `https://raw.githubusercontent.com/${meta().repo}/${gitRef(version)}/${repoPath}`;
+}
+
 export const githubUrl = (version: string, repoPath: string, dir = false) =>
   `${REPO_URL()}/${dir ? "tree" : "blob"}/${gitRef(version)}/${repoPath}`;
 

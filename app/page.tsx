@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ApiSearchMock } from "@/components/landing/ApiSearchMock";
-import { DebugMock } from "@/components/landing/DebugMock";
 import { DevWindowMock } from "@/components/landing/DevWindowMock";
 import { EditorMock } from "@/components/landing/EditorMock";
 import { Terminal, type TermLine } from "@/components/landing/Terminal";
@@ -384,10 +383,17 @@ export default function Home() {
           </p>
         </div>
         <figure style={{ margin: 0, display: "grid", gap: 10 }}>
-          <DebugMock />
+          <img
+            className="landing-shot"
+            src="/landing/vscode-debugging.webp"
+            width={1920}
+            height={1050}
+            loading="lazy"
+            alt="VS Code debugging an addon with wowlua: paused at a breakpoint in Root.wowlua inside an @onLogin handler, the call stack shows event PLAYER_LOGIN, the breakpoints list includes stopping when execution becomes tainted or a protected action is blocked, and the wowlua: UI panel shows the addon's welcome window drawn as the game draws it"
+          />
           <figcaption className="caption" style={{ color: "var(--ink-muted)" }}>
-            An addon paused in an <code className="wl-icode">@onLogin</code> handler. Left: its upvalues, the call stack back to{" "}
-            <code className="wl-icode">event PLAYER_LOGIN</code>, and breakpoints for taint and blocked protected actions. Right: the game&apos;s screen at that stop.
+            An addon paused in an <code className="wl-icode">@onLogin</code> handler. Left: variables, the call stack back to{" "}
+            <code className="wl-icode">event PLAYER_LOGIN</code>, and breakpoints for taint and blocked protected actions. Right: the game&apos;s screen, live.
           </figcaption>
         </figure>
         <ul className="landing-tiles">

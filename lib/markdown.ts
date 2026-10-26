@@ -15,7 +15,7 @@ import remarkRehype from "remark-rehype";
 import { cache } from "react";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
-import { githubUrl, hrefForRepoPath, readRepoFile } from "./content";
+import { githubUrl, hrefForRepoPath, rawUrl, readRepoFile } from "./content";
 import { diagHtml } from "./diag";
 import { diagnosticHref } from "./diagnostics";
 import { escapeHtml, highlight } from "./highlight";
@@ -73,6 +73,16 @@ function rehypeDesign(ctx: Ctx, out: { title: string | null; description: string
           const href = typeof p.href === "string" ? p.href : "";
           p.href = rewriteHref(ctx, href);
           if (/^https?:/.test(String(p.href))) p.rel = ["noreferrer"];
+          break;
+        }
+        case "img": {
+          // An image next to the docs (`images/x.webp`) is served from the repository at this version.
+          const src = typeof p.src === "string" ? p.src : "";
+          if (src && !/^([a-z]+:|\/)/i.test(src)) {
+            const repoPath = path.posix.normalize(path.posix.join(path.posix.dirname(ctx.repoPath), src));
+            if (!repoPath.startsWith("..")) p.src = rawUrl(ctx.version, repoPath);
+          }
+          p.loading = "lazy";
           break;
         }
         case "code": {

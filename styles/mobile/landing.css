@@ -35,18 +35,6 @@
   .landing-ship { grid-template-columns: minmax(0, 1fr); }
   .landing-ship .landing-tile { padding: 20px 16px; }
 
-  /* VS Code: the game's screen, the editor, then the debug sidebar, stacked */
-  .landing-debug { grid-template-columns: minmax(0, 1fr); min-height: 0; }
-  .landing-debug__ui { order: 1; }
-  .landing-debug__screen { flex: none; aspect-ratio: 16 / 10; min-height: 0; }
-  .landing-debug__zone { font-size: 15px; line-height: 18px; }
-  .landing-debug__zone small { font-size: 11px; line-height: 14px; }
-  .landing-debug__window { width: 52%; padding: 16px 6px 12px; font-size: 9.5px; line-height: 12px; }
-  .landing-debug__player { left: 6%; }
-  .landing-debug__editor { order: 2; border-right: 0; border-top: 1px solid var(--line); }
-  .landing-debug__line.is-head { display: none; }
-  .landing-debug__side { order: 3; border-right: 0; border-top: 1px solid var(--line); }
-
   /* Dev window: the compact window on the world backdrop */
   .landing-devwin--wide { display: none; }
   .landing-devwin--phone { flex: 1 1 100%; padding: 12px; }

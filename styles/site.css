@@ -217,52 +217,5 @@ pre, .wl-term__body, .wl-code__pre, .wl-diag { overflow-x: auto; }
 .landing-api__row.is-hl { background: var(--amber-soft); }
 .landing-api__head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
-/* VS Code: the debugger beside the game's screen */
-.landing-debug {
-  display: grid; grid-template-columns: 296px minmax(0, 1fr) minmax(0, 0.9fr); min-height: 500px;
-  background: var(--bg-000); border: 1px solid var(--line); box-shadow: var(--shadow-pop); font-size: 12px; line-height: 18px; overflow: hidden;
-}
-.landing-debug p, .landing-debug h3 { margin: 0; }
-.landing-debug__side { background: var(--bg-200); border-right: 1px solid var(--line); padding: 10px 0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 12px; min-width: 0; }
-.landing-debug__title { padding: 0 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); }
-.landing-debug__head { padding: 4px 14px; font: 600 11px/16px var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); border-top: 1px solid var(--line); }
-.landing-debug__scope { padding: 1px 14px 1px 20px; color: var(--ink); }
-.landing-debug__var { padding: 1px 14px 1px 34px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.landing-debug__frame, .landing-debug__bp { display: flex; gap: 8px; align-items: center; padding: 1px 14px 1px 20px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; }
-.landing-debug__frame.is-own { color: var(--ink); background: var(--amber-soft); }
-.landing-debug__bp { color: var(--ink); }
-.landing-debug__at { flex: none; margin-left: auto; color: var(--ink-faint); font-size: 11px; }
-.landing-debug__frame > span:first-child, .landing-debug__bp > span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.landing-debug__box { width: 10px; height: 10px; flex: none; border: 1px solid var(--line-strong); }
-.landing-debug__box.is-on { background: var(--amber); border-color: var(--amber); }
-.landing-debug__editor { min-width: 0; display: flex; flex-direction: column; border-right: 1px solid var(--line); }
-.landing-debug__tabs { display: flex; align-items: center; height: 32px; flex: none; background: var(--bg-200); border-bottom: 1px solid var(--line); color: var(--ink-muted); }
-.landing-debug__tab { height: 100%; display: inline-flex; align-items: center; padding: 0 14px; box-sizing: border-box; background: var(--bg-000); color: var(--ink); border-right: 1px solid var(--line); border-top: 2px solid var(--amber); }
-.landing-debug__toolbar { margin-left: auto; display: flex; gap: 12px; padding: 0 12px; color: var(--note); }
-.landing-debug__status { margin-left: auto; padding: 0 12px; color: var(--warning); }
-.landing-debug__code { padding: 8px 0; white-space: pre; overflow: hidden; font-size: 12px; line-height: 18px; }
-.landing-debug__line { display: flex; }
-.landing-debug__line .wl-code__line { padding: 0; }
-.landing-debug__line.is-stop { background: var(--warning-soft); box-shadow: inset 2px 0 0 var(--warning); }
-.landing-debug__num { position: relative; flex: none; width: 44px; box-sizing: border-box; padding-right: 12px; text-align: right; color: var(--ink-faint); user-select: none; }
-.landing-debug__dot { position: absolute; left: 6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--error); }
-.landing-debug__ui { min-width: 0; display: flex; flex-direction: column; background: #000; }
-/* The game's screen at the stop, after the client's own drawing: fixed colours, like the in-game previews */
-.landing-debug__screen { position: relative; flex: 1; min-height: 240px; overflow: hidden; background: #000; color: #f4e9c8; font-family: Georgia, "Times New Roman", serif; }
-.landing-debug__zone { position: absolute; left: 0; right: 0; top: 16%; text-align: center; font-size: 22px; line-height: 26px; color: #f6e7b4; }
-.landing-debug__zone small { display: block; font-size: 15px; line-height: 20px; }
-.landing-debug__map {
-  position: absolute; right: 4%; top: 5%; width: 18%; aspect-ratio: 1; border-radius: 50%; border: 3px solid #6b5636;
-  background: radial-gradient(circle at 55% 40%, #9a5b3c 0 6%, transparent 7%), radial-gradient(circle at 40% 60%, #6f8a3c, #4c6a2a 60%, #3b4c25);
-}
-.landing-debug__window {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 40%; min-width: 170px; padding: 26px 10px 22px; box-sizing: border-box;
-  background: linear-gradient(180deg, #3a3631, #26231f); border: 2px solid #8b8170; outline: 1px solid #1a1714; text-align: center; font-family: var(--font-mono); font-size: 11px; line-height: 14px; color: #fff;
-}
-.landing-debug__close { position: absolute; right: -6px; top: -6px; width: 18px; height: 18px; display: grid; place-items: center; background: #9c1c10; border: 1px solid #e0b34a; color: #ffd36a; font-size: 13px; line-height: 1; }
-.landing-debug__player { position: absolute; left: 24%; bottom: 23%; display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); }
-.landing-debug__portrait { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #b08c4a; background: radial-gradient(circle at 50% 40%, #c79a7a, #5e4031); display: grid; place-items: end start; font-size: 9px; color: #fff; }
-.landing-debug__bars { display: grid; gap: 2px; width: 76px; font-size: 8px; line-height: 10px; color: #ffd36a; text-align: center; border: 1px solid #8b7442; padding: 1px; }
-.landing-debug__bars i { display: block; height: 6px; background: #1fbf2f; }
-.landing-debug__actions { position: absolute; left: 15%; right: 15%; bottom: 2%; display: flex; gap: 2px; }
-.landing-debug__actions > span { flex: 1; aspect-ratio: 1; max-width: 26px; border: 1px solid #5b4d34; background: #17140f; color: #d9c79a; font: 400 7px/1 var(--font-mono); padding: 2px; box-sizing: border-box; text-align: right; }
+/* VS Code: a screenshot of the debugger beside the game's screen */
+.landing-shot { display: block; width: 100%; height: auto; border: 1px solid var(--line); box-shadow: var(--shadow-pop); }
