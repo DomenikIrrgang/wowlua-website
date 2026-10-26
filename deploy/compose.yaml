@@ -1,7 +1,8 @@
 # wowlua.dev on the `suuui` droplet, installed at /opt/wowlua. Traefik runs in
 # the suuui stack (/opt/suuui) and reaches this app over its `suuui_web`
-# network as `wowlua-app`. IMAGE_TAG is written to /opt/wowlua/.env by
-# wowlua-deploy (see deploy.sh).
+# network as `wowlua-app`, and the package registry as `wowlua-registry`.
+# IMAGE_TAG and REGISTRY_TAG are written to /opt/wowlua/.env by wowlua-deploy
+# (see deploy.sh).
 name: wowlua
 
 services:
@@ -21,6 +22,34 @@ services:
       start_period: 10s
       retries: 3
     networks: [web]
+
+  # registry.wowlua.dev: the package registry (crates/wowlua-registry in the
+  # wowlua repository). It runs only with `COMPOSE_PROFILES=registry` in .env,
+  # so the site deploys without it until it is set up. Its secrets (the GitHub
+  # app's client id and secret, WOWLUA_REGISTRY_ADMINS) are in registry.env,
+  # root-only, never in this file.
+  wowlua-registry:
+    profiles: [registry]
+    image: registry.digitalocean.com/suuui/wowlua-registry:${REGISTRY_TAG:-unset}
+    restart: unless-stopped
+    env_file:
+      - path: registry.env
+        required: false
+    environment:
+      WOWLUA_REGISTRY_URL: https://registry.wowlua.dev
+      # Only Traefik reaches the server (it publishes no port), over Docker's
+      # private networks: its X-Forwarded-For names the client.
+      WOWLUA_REGISTRY_TRUSTED_PROXIES: 172.16.0.0/12,192.168.0.0/16
+    volumes:
+      - registry-data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [web]
+
+volumes:
+  registry-data:
 
 networks:
   web:

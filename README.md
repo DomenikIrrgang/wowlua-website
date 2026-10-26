@@ -81,6 +81,22 @@ from there. The image tag names the site commit, and wowlua's main commit and la
 The `production` environment holds the secrets `DIGITALOCEAN_ACCESS_TOKEN` and `DEPLOY_SSH_KEY`, and the variables
 `DEPLOY_HOST` and `DEPLOY_KNOWN_HOSTS`.
 
+### The registry
+
+https://registry.wowlua.dev, the package registry (`crates/wowlua-registry` in the wowlua repository), is the same
+Compose project's `wowlua-registry` service. Its image, `registry.digitalocean.com/suuui/wowlua-registry:<wowlua
+sha12>`, is built by wowlua's `registry-image.yml`; every run of the site's deploy workflow (also one by hand)
+deploys the newest one with `wowlua-deploy registry-<wowlua sha12>`. Packages and accounts live in the
+`registry-data` volume. Setting it up, once:
+
+1. Create a GitHub OAuth app with the callback URL `https://registry.wowlua.dev/login/callback`.
+2. Write `/opt/wowlua/registry.env` (owner root, mode 600) with `WOWLUA_REGISTRY_GITHUB_CLIENT_ID`,
+   `WOWLUA_REGISTRY_GITHUB_CLIENT_SECRET` and `WOWLUA_REGISTRY_ADMINS` (GitHub logins), as
+   wowlua's `crates/wowlua-registry/README.md` describes them.
+3. Add `COMPOSE_PROFILES=registry` to `/opt/wowlua/.env`; without it the site deploys alone.
+4. Route `registry.wowlua.dev` to `http://wowlua-registry:8080` in suuui's Traefik, with `*.wowlua.dev` on the
+   wowlua.dev certificate (the DNS has a `*.wowlua.dev` record).
+
 ## Licence
 
 MIT. Fonts: Martian Mono and IBM Plex Mono (SIL Open Font License 1.1).

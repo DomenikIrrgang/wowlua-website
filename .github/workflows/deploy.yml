@@ -97,19 +97,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to droplet
-        if: steps.skip.outputs.skip != 'true'
+      - name: Install deploy key
         env:
-          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
           DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           (umask 077 && printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key)
+
+      - name: Deploy to droplet
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+        run: |
           # The key's forced command runs wowlua-deploy with this argument.
           ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "deploy@$DEPLOY_HOST" "${{ steps.v.outputs.tag }}"
+
+      # Every run, also a skipped site build: the registry's newest image (built
+      # by wowlua's registry-image.yml), so a run by hand deploys a new server.
+      # wowlua-deploy skips it while the registry is not set up or is current.
+      - name: Deploy the registry's newest image
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+        run: |
+          tag="$(doctl registry repository list-tags wowlua-registry --output json 2>/dev/null \
+            | jq -r 'sort_by(.updated_at) | last | .tag // empty' || true)"
+          if [ -z "$tag" ]; then
+            echo "no registry image yet"
+            exit 0
+          fi
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "deploy@$DEPLOY_HOST" "registry-$tag"
 
       - name: Remove deploy key
         if: always()
