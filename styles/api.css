@@ -1,0 +1,165 @@
+/* The WoW API reference (/api): the index's search and namespace grid, and the entries' pages. From the
+   "WoW API" page of the design canvas; phones (760 px) at the end. The layout is the docs' (markdown.css). */
+
+.api-main { gap: 20px; grid-template-columns: minmax(0, 1fr); }
+.api-main > * { max-width: 880px; }
+.api-main--wide { gap: 28px; }
+.api-main--wide > * { max-width: none; }
+.api-main a:not([class]) { color: var(--amber-ink); }
+.api-main a:not([class]):hover { color: var(--ink); }
+.api-muted { margin: 0; color: var(--ink-muted); }
+
+/* Header: the name, its badges, what it does */
+.api-head { display: grid; gap: 10px; }
+.api-titlerow h1, .api-head h1 { margin: 0; overflow-wrap: anywhere; }
+.api-head .wl-badge-row a.wl-badge { text-decoration: none; }
+.api-titlerow { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; }
+.api-titlerow h1 { margin: 0; }
+.api-titlerow .caption { color: var(--ink-muted); }
+.api-lead { margin: 0; max-width: var(--size-prose); color: var(--ink-muted); }
+.api-lead > p { margin: 0; }
+.api-lead > p + p { margin-top: 12px; }
+.api-intro { display: grid; gap: 12px; max-width: 820px; }
+.api-intro h1 { margin: 0; }
+.api-intro__lead > * { margin: 0; color: var(--ink-muted); }
+.api-intro__lead > * + * { margin-top: 12px; }
+
+/* Sections: an h2 the contents list links to */
+.api-section { display: grid; gap: 12px; min-width: 0; scroll-margin-top: 80px; }
+.api-section > h2 { margin: 16px 0 0; scroll-margin-top: 80px; }
+.api-section > h3 { margin: 8px 0 0; scroll-margin-top: 80px; }
+.api-section > p { margin: 0; }
+.api-section .wl-table td code:not(.wl-icode) { font-size: 13px; }
+.api-section .wl-table td a { text-decoration: none; }
+.api-name { white-space: nowrap; }
+.api-wiki { color: var(--ink-muted) !important; text-decoration: none; }
+.api-wiki:hover { color: var(--amber-ink) !important; }
+.api-note { max-width: none; }
+.api-note > :first-child { margin-top: 0; }
+.api-note > h3 { margin-top: 4px; }
+
+/* A bar split by status */
+.api-meter { display: flex; background: var(--bg-300); }
+.api-meter > span { display: block; }
+.api-total { display: grid; gap: 8px; }
+.api-total .caption { color: var(--ink-muted); }
+
+/* In the emulator: the status and what it means */
+.api-state { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; }
+.api-state .body-s { color: var(--ink-muted); }
+
+/* Lists: Restrictions, Related, Structures */
+.api-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.api-list li::marker { color: var(--ink-faint); }
+.api-related { display: flex; flex-wrap: wrap; gap: 24px 48px; }
+.api-related ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; align-content: start; }
+.api-related li::marker { color: var(--ink-faint); }
+.api-related .wl-icode { white-space: normal; }
+.api-callout .wl-callout__body > * { margin: 0; }
+.api-callout .wl-callout__body > * + * { margin-top: 8px; }
+
+/* Inherits from: the class, then its bases level by level */
+.api-chain { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.api-chain a.wl-badge { text-decoration: none; }
+.api-chain [aria-hidden] { color: var(--ink-muted); }
+
+/* sources */
+.api-sources { display: grid; gap: 8px; padding-top: 20px; border-top: 1px solid var(--line); }
+.api-sources h2 { margin: 0; color: var(--ink-muted); }
+.api-sources p { margin: 0; color: var(--ink-muted); }
+
+/* Sidebar: the filter's matches */
+.api-filter { display: grid; gap: 6px; }
+.api-filter__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.api-filter__hits .wl-docs-sidebar__link { gap: 8px; }
+.api-filter__hits .wl-docs-sidebar__tag { flex: none; }
+.docs-sidebar option:disabled { color: var(--ink-faint); }
+
+/* Index: search */
+.api-search { display: grid; gap: 14px; padding: 20px; background: var(--bg-200); border: 1px solid var(--line); min-width: 0; }
+.api-search .wl-input__control { font-size: 16px; }
+.api-search__filters { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; }
+.api-search__group { display: flex; flex-wrap: wrap; gap: 6px; }
+.api-search__summary { margin: 0; color: var(--ink-muted); }
+.api-search__results { margin: 0; padding: 0; list-style: none; display: grid; border-top: 1px solid var(--line); }
+.api-search__results > li { border-bottom: 1px solid var(--line); }
+.api-search__row { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; padding: 12px 4px; color: var(--ink); text-decoration: none; }
+.api-search__row:hover { background: var(--bg-300); }
+.api-search__name { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; font-size: 14px; font-weight: 600; color: var(--syn-function); }
+.api-search__where { margin-left: auto; color: var(--ink-faint); }
+.api-search__desc { flex: 1 1 100%; color: var(--ink-muted); }
+.api-search__more { justify-self: start; }
+.api-search__scope { margin: -14px 0 0; color: var(--ink-faint); }
+
+/* Index: the prose of docs/reference/api.md around the data */
+.api-prose { display: grid; gap: 16px; max-width: 880px !important; min-width: 0; scroll-margin-top: 80px; }
+.api-prose > .md { max-width: none; }
+.api-prose .md > h2 { margin: 0; }
+.api-prose--wide { max-width: none !important; }
+.api-prose__head { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
+.api-prose__head h2 { margin: 0; }
+.api-prose__head .caption { color: var(--ink-muted); }
+.api-prose--foot { padding-top: 24px; border-top: 1px solid var(--line); }
+.api-prose--foot .md { font-size: 13px; line-height: 22px; }
+.api-prose--foot .md > h2 { font-size: 20px; line-height: 28px; }
+
+/* Index: namespace grid */
+.api-grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.api-card { display: grid; gap: 8px; padding: 14px 16px; height: 100%; box-sizing: border-box; background: var(--bg-200); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.api-card:hover { border-color: var(--line-strong); background: var(--bg-300); }
+.api-card__head { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.api-card__head .heading-3 { font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+.api-card__head .caption { margin-left: auto; flex: none; color: var(--ink-muted); }
+.api-card__counts { color: var(--ink-muted); }
+.api-grid__all { justify-self: start; padding: 0; background: none; border: 0; cursor: pointer; font: 400 13px/20px var(--font-mono); color: var(--amber-ink); }
+.api-grid__all:hover { color: var(--ink); }
+
+/* Events and widgets indexes */
+.api-system { display: grid; gap: 10px; scroll-margin-top: 80px; }
+.api-system h3 { margin: 8px 0 0; }
+.api-system h3 .caption { font-weight: 400; color: var(--ink-muted); }
+.api-wcount { display: grid; gap: 4px; min-width: 160px; }
+
+@media (max-width: 760px) {
+  .api-main { gap: 16px; }
+  .api-head .heading-1, .api-titlerow .heading-1 { font-size: 26px; line-height: 34px; }
+  .api-intro .display-l { font-size: 32px; line-height: 40px; }
+  .api-section > h2 { margin-top: 8px; font-size: 20px; line-height: 28px; }
+
+  /* Search: full width, the filters scroll sideways in one row each */
+  .api-search { padding: 14px; margin: 0 -16px; border-left: 0; border-right: 0; }
+  .api-search__group { flex-wrap: nowrap; overflow-x: auto; margin: 0 -14px; padding: 0 14px; scrollbar-width: none; }
+  .api-search__group .wl-btn { flex: none; min-height: 36px; }
+  .api-search__filters { gap: 8px; }
+  .api-search__row { padding: 12px 0; gap: 6px 10px; }
+  .api-search__where { margin-left: 0; flex-basis: 100%; order: 4; }
+  .api-search__scope { margin-top: -8px; }
+  .api-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .api-grid__all { min-height: 44px; }
+
+  /* Tables: each row a stacked card (as the docs' tables, markdown.css) */
+  .api-section .wl-table, .api-system .wl-table { overflow: visible; }
+  .api-section .wl-table table, .api-section .wl-table tbody, .api-section .wl-table tr, .api-section .wl-table td,
+  .api-system .wl-table table, .api-system .wl-table tbody, .api-system .wl-table tr, .api-system .wl-table td { display: block; }
+  .api-section .wl-table caption, .api-system .wl-table caption { display: block; }
+  .api-section .wl-table thead, .api-system .wl-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .api-section .wl-table tr, .api-system .wl-table tr { display: grid; gap: 4px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .api-section .wl-table tr:last-child, .api-system .wl-table tr:last-child { border-bottom: 0; }
+  .api-section .wl-table tbody tr:hover td, .api-system .wl-table tbody tr:hover td { background: none; }
+  .api-section .wl-table td, .api-system .wl-table td { min-width: 0; padding: 0; border: 0; font-size: 13px; line-height: 21px; overflow-wrap: anywhere; white-space: normal; }
+  .api-section .wl-table code, .api-system .wl-table code { white-space: normal; overflow-wrap: anywhere; }
+  .api-section .wl-table td:empty, .api-system .wl-table td:empty { display: none; }
+  .api-section .wl-table td:first-child, .api-system .wl-table td:first-child { font-weight: 600; }
+  .api-section .wl-table td[data-label]:not(:first-child)::before { content: attr(data-label) ": "; color: var(--ink-muted); }
+  .api-section .wl-table td .wl-badge, .api-system .wl-table td .wl-badge { justify-self: start; }
+
+  /* Code: long lines wrap under a hanging indent */
+  .api-main .wl-code__pre { font-size: 12.5px; line-height: 20px; }
+  .api-main .wl-code__pre code { min-width: 0; }
+  .api-main .wl-code__line { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: calc(16px + 8ch); text-indent: -8ch; }
+
+  .api-related { display: grid; gap: 12px; }
+  .api-related li { min-height: 32px; }
+  .api-prose--foot .md { font-size: 13px; }
+  .api-sources { padding-top: 16px; }
+}

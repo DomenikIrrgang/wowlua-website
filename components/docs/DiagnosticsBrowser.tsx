@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 export type BrowserCode = { code: string; kind: "error" | "warning" | "hint"; text: string; html: string; href: string | null };
-export type BrowserArea = { range: string; title: string; codes: BrowserCode[] };
+export type BrowserArea = { range: string; title: string; short?: string; codes: BrowserCode[] };
 
 const KINDS = [
   { kind: "error", label: "errors", badge: "wl-badge--error" },
@@ -36,8 +36,8 @@ function Row({ c, area }: { c: BrowserCode; area?: string }) {
 }
 
 /**
- * The diagnostics appendix on phones: search the codes and their messages, filter by severity, and browse them by
- * area. Wider screens show the appendix's own tables instead.
+ * The errors and warnings on phones: search the codes and their messages, filter by severity, and browse them by
+ * area. Wider screens get DiagnosticsIndex instead.
  */
 export function DiagnosticsBrowser({ areas }: { areas: BrowserArea[] }) {
   const [query, setQuery] = useState("");

@@ -10,7 +10,7 @@ export type ShowcaseEntry = {
   links: Partial<Record<"website" | "source" | "curseforge" | "wago", string>>;
 };
 
-/** The showcase cards. On phones a search box and flavor and kind selects above them filter the list. */
+/** The showcase cards, with a search box and flavor and kind selects above them. */
 export function ShowcaseList({ entries }: { entries: ShowcaseEntry[] }) {
   const [q, setQ] = useState("");
   const [flavor, setFlavor] = useState("all");
@@ -31,80 +31,84 @@ export function ShowcaseList({ entries }: { entries: ShowcaseEntry[] }) {
   };
   return (
     <>
-      <div className="showcase-filter">
-        <label className="wl-sr-only" htmlFor="sc-q">
-          filter
-        </label>
-        <div className="showcase-filter__search">
-          <span aria-hidden="true">/</span>
-          <input id="sc-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="name or keyword" autoComplete="off" />
-        </div>
-        <div className="showcase-filter__selects">
-          <div className="wl-field">
-            <label className="wl-field__label" htmlFor="sc-flavor">
-              flavor
-            </label>
-            <div className="wl-select">
-              <select className="wl-select__control" id="sc-flavor" value={flavor} onChange={(e) => setFlavor(e.target.value)}>
-                <option value="all">all flavors</option>
-                {flavors.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="wl-field">
-            <label className="wl-field__label" htmlFor="sc-kind">
-              kind
-            </label>
-            <div className="wl-select">
-              <select className="wl-select__control" id="sc-kind" value={kind} onChange={(e) => setKind(e.target.value)}>
-                <option value="all">all kinds</option>
-                {kinds.map((k) => (
-                  <option key={k} value={k}>
-                    {k}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <section className="showcase-filter" aria-label="Filter entries">
+        <div className="wl-field showcase-filter__q">
+          <label className="wl-field__label" htmlFor="sc-q">
+            filter
+          </label>
+          <div className="wl-input">
+            <span className="wl-input__prefix" aria-hidden="true">
+              /
+            </span>
+            <input className="wl-input__control" id="sc-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="name or keyword" autoComplete="off" />
           </div>
         </div>
-        <span className="caption" role="status" style={{ color: "var(--ink-muted)" }}>
+        <div className="wl-field">
+          <label className="wl-field__label" htmlFor="sc-flavor">
+            flavor
+          </label>
+          <div className="wl-select">
+            <select className="wl-select__control" id="sc-flavor" value={flavor} onChange={(e) => setFlavor(e.target.value)}>
+              <option value="all">all</option>
+              {flavors.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="wl-field">
+          <label className="wl-field__label" htmlFor="sc-kind">
+            kind
+          </label>
+          <div className="wl-select">
+            <select className="wl-select__control" id="sc-kind" value={kind} onChange={(e) => setKind(e.target.value)}>
+              <option value="all">all kinds</option>
+              {kinds.map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <span className="caption showcase-filter__count" role="status">
           {shown.length} {shown.length === 1 ? "entry" : "entries"}
         </span>
-      </div>
+      </section>
 
-      <ul className="showcase">
-        {shown.map((e) => (
-          <li key={e.name} className="showcase__item">
-            <div className="showcase__head" style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-              <h2 className="heading-2" style={{ margin: 0 }}>
-                {e.name}
-              </h2>
-              <span className="wl-badge showcase__kind">{e.kind}</span>
-            </div>
-            <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }}>
-              {e.description}
-            </p>
-            <div className="wl-badge-row">
-              {e.flavors.map((f) => (
-                <span key={f} className="wl-badge wl-badge--release">
-                  {f}
-                </span>
-              ))}
-            </div>
-            <div className="showcase__links caption">
-              {Object.entries(e.links).map(([k, u]) => (
-                <a key={k} href={u}>
-                  <span>{k}</span> <span aria-hidden="true">↗</span>
-                </a>
-              ))}
-            </div>
-          </li>
-        ))}
-      </ul>
+      {shown.length > 0 && (
+        <section className="showcase" aria-label="Entries">
+          {shown.map((e) => (
+            <article key={e.name} className="showcase__item">
+              <div className="showcase__head">
+                <h2 className="heading-3" style={{ margin: 0 }}>
+                  {e.name}
+                </h2>
+                <span className="caption showcase__kind">{e.kind}</span>
+              </div>
+              <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }}>
+                {e.description}
+              </p>
+              <div className="wl-badge-row">
+                {e.flavors.map((f) => (
+                  <span key={f} className="wl-badge">
+                    {f}
+                  </span>
+                ))}
+              </div>
+              <div className="showcase__links">
+                {Object.entries(e.links).map(([k, u]) => (
+                  <a key={k} href={u}>
+                    <span>{k}</span> <span aria-hidden="true">↗</span>
+                  </a>
+                ))}
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
       {shown.length === 0 && (
         <div className="showcase-empty">
           <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }}>

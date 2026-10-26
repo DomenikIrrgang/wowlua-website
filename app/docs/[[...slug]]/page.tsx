@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DiagnosticsBrowser } from "@/components/docs/DiagnosticsBrowser";
+import { DiagnosticsIndex } from "@/components/docs/DiagnosticsIndex";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { MobileToc } from "@/components/docs/MobileToc";
 import { Banner, Breadcrumb, PageNav, Toc } from "@/components/docs/parts";
 import { SectionFold } from "@/components/docs/SectionFold";
-import { APPENDIX, diagnosticAreas } from "@/components/docs/diagnosticAreas";
+import { CODES_PAGE, diagnosticAreas } from "@/components/docs/diagnosticAreas";
 import { JsonLd, SITE, breadcrumbs } from "@/components/JsonLd";
 import {
   docsHref,
@@ -54,7 +55,7 @@ async function load(params: Promise<Params>) {
 }
 
 /** Long reference pages whose sections fold behind their headings on phones. */
-const folds = (repoPath: string) => /^spec\/(toolchain|stdlib)\/(?!README\.md$)/.test(repoPath);
+const folds = (repoPath: string) => /^docs\/reference\/(?!diagnostics|api)/.test(repoPath);
 
 /** "12. CLI" → "CLI", "Appendix B. Diagnostics" → "Diagnostics" (the page's h1 keeps the number). */
 const searchTitle = (title: string) => title.replace(/^(Appendix [A-Z]\.|[\d.]+)\s+/, "");
@@ -85,12 +86,14 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
     ...(section && section.items[0].href !== path ? [{ name: section.title, path: section.items[0].href }] : []),
     { name: searchTitle(rendered.title ?? "docs"), path },
   ];
-  // On phones the diagnostics appendix is browsed by area instead of read as tables.
-  const areas = page.repoPath === APPENDIX ? diagnosticAreas(version) : [];
+  // The errors and warnings page lists every code after its prose.
+  const areas = page.repoPath === CODES_PAGE ? diagnosticAreas(version) : [];
   const fold = folds(page.repoPath);
+  const split = rendered.html.search(/<h2[\s>]/);
+  const [lead, rest] = split < 0 ? [rendered.html, ""] : [rendered.html.slice(0, split), rendered.html.slice(split)];
 
   return (
-    <div className={areas.length ? "docs docs--codes" : "docs"}>
+    <div className="docs">
       <JsonLd
         data={[
           breadcrumbs(crumbs),
@@ -141,9 +144,18 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
           </div>
         </header>
         {!areas.length && <MobileToc key={`toc:${path}`} entries={rendered.toc} />}
-        <article className="md" data-fold={fold ? "" : undefined} dangerouslySetInnerHTML={{ __html: rendered.html }} />
+        {areas.length > 0 ? (
+          <>
+            {/* The codes follow the page's lead; the rest of its prose comes after them. */}
+            <article className="md" dangerouslySetInnerHTML={{ __html: lead }} />
+            <DiagnosticsIndex areas={areas} />
+            <DiagnosticsBrowser areas={areas} />
+            <article className="md" dangerouslySetInnerHTML={{ __html: rest }} />
+          </>
+        ) : (
+          <article className="md" data-fold={fold ? "" : undefined} dangerouslySetInnerHTML={{ __html: rendered.html }} />
+        )}
         {fold && <SectionFold key={`fold:${path}`} />}
-        {areas.length > 0 && <DiagnosticsBrowser areas={areas} />}
         <PageNav prev={prev} next={next} />
         <p className="docs__source caption">
           <span>{version === "main" ? `main · ${ref.sha?.slice(0, 7) ?? ""}` : ref.ref}</span>

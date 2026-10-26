@@ -24,7 +24,9 @@ export default function BlogPage() {
             [ blog ]
           </span>
           <h1 className="display-l">Release notes and field reports</h1>
-          <p className="body-l">What changed in each release, and what testing wowlua against real addons taught us.</p>
+          <p className="body-l" style={{ maxWidth: "60ch" }}>
+            What changed in each release, and what testing wowlua against real addons taught us.
+          </p>
         </header>
         <BlogList items={items} topics={topics} />
       </div>

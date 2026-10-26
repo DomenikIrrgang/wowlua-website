@@ -1,7 +1,7 @@
 /* wowlua.dev on a phone: docs. From the "wowlua.dev · mobile" design canvas (390 px artboards). */
 
 /* Phone-only parts stay out of the desktop layout */
-.docs-bar, .docs-mtoc, .docs__source, .docs-dx, .docs-back, .docs-entry__kind, .docs-entry__facts, .wl-page-nav.docs-entry__nav { display: none; }
+.docs-bar, .docs-mtoc, .docs__source, .docs-dx, .docs-back { display: none; }
 
 @media (max-width: 760px) {
   /* Contents bar: sticky under the header, names the page, drops the version picker and the sidebar over the page */
@@ -108,13 +108,8 @@
   .docs__main .wl-page-nav__link--next { grid-column: 2; }
   .docs__main .wl-page-nav__title { font: 600 13px/21px var(--font-mono); }
 
-  /* Diagnostics appendix: the code tables give way to a searchable list by area */
-  .docs--codes .md > .wl-table, .docs--codes .md > h2 { display: none; }
-  /* The browser follows the lead; the appendix's other notes come after it */
-  .docs--codes .md { display: contents; }
-  .docs--codes .docs-dx { order: 1; }
-  .docs--codes .md > :not(:first-child) { order: 2; }
-  .docs--codes .wl-page-nav, .docs--codes .docs__source { order: 3; }
+  /* Errors and warnings: the area tables give way to a searchable list by area */
+  .docs-dxi { display: none; }
   .docs-dx { display: grid; gap: 16px; min-width: 0; }
   .docs-dx__bar {
     position: sticky; top: calc(var(--size-header, 56px) + 48px); z-index: 30; margin: 0 -16px; padding: 10px 16px;
@@ -156,36 +151,8 @@
   .docs-dx__msg .wl-icode { white-space: normal; overflow-wrap: anywhere; }
   .docs-dx__where, .docs-dx__arrow { color: var(--ink-muted); }
 
-  /* A diagnostic's page: back link, code and kind, facts */
+  /* A diagnostic's page: a back link in place of the sidebar */
   .docs--entry .docs__side { display: none; }
   .docs--entry .docs__main { padding-top: 8px; }
   .docs-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; justify-self: start; color: var(--ink-muted); text-decoration: none; }
-  .docs--entry .docs__head > .wl-badge-row { display: none; }
-  .docs--entry .docs__head .heading-1 { display: flex; align-items: center; gap: 12px; font-size: 32px; line-height: 38px; }
-  .docs-entry__kind { display: inline-flex; }
-  .docs--entry .docs__lead { font-size: 15px; line-height: 26px; color: var(--ink); }
-  .docs--entry .md > p:first-child { color: var(--ink); }
-  .docs-entry__facts {
-    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; margin: 0; padding: 12px 0;
-    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-  }
-  .docs-entry__facts > div { display: grid; gap: 2px; align-content: start; min-width: 0; }
-  .docs-entry__facts dt { color: var(--ink-muted); }
-  .docs-entry__facts dd { margin: 0; overflow-wrap: anywhere; }
-  .docs-entry__facts .wl-badge { text-decoration: none; }
-  .docs--entry .md ul { list-style: none; padding: 0; gap: 0; border-top: 1px solid var(--line); font-size: 13px; line-height: 21px; }
-  .docs--entry .md li { padding: 12px 0; border-bottom: 1px solid var(--line); }
-  .docs-entry__all { display: none; }
-  .wl-page-nav.docs-entry__nav { display: grid; }
-
-  /* Nearby codes: badge and summary per row */
-  .md .docs-codes { border: 0; border-top: 1px solid var(--line); }
-  .md .docs-codes tr, .md .docs-codes tr:last-child { grid-template-columns: 64px minmax(0, 1fr); gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-  .md .docs-codes td:first-child a {
-    display: inline-flex; padding: 0 6px; font-size: 11.5px; line-height: 18px; font-weight: 500; letter-spacing: 0.02em; text-decoration: none;
-    color: var(--ink); background: var(--bg-200); border: 1px solid var(--line-strong); border-radius: var(--radius-1);
-  }
-  .md .docs-codes tr[data-kind="error"] td:first-child a { color: var(--error); background: var(--error-soft); border-color: var(--error); }
-  .md .docs-codes tr[data-kind="warning"] td:first-child a { color: var(--warning); background: var(--warning-soft); border-color: var(--warning); }
-  .md .docs-codes tr[data-kind="hint"] td:first-child a { color: var(--note); background: var(--note-soft); border-color: var(--note); }
 }

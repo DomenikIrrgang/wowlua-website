@@ -8,13 +8,14 @@ import { CHOICES, useTheme } from "./ThemeToggle";
 type L = { label: string; href: string };
 
 const GUIDE: L[] = [
-  { label: "installation", href: "/docs/install" },
-  { label: "getting started", href: "/docs/getting-started" },
+  { label: "installation", href: "/docs/guide/install" },
+  { label: "getting started", href: "/docs/guide/getting-started" },
+  { label: "language tour", href: "/docs/language/tour" },
 ];
 const REFERENCE: L[] = [
-  { label: "cli commands", href: "/docs/spec/toolchain/cli" },
-  { label: "wowlua.json", href: "/docs/spec/toolchain/manifest" },
-  { label: "diagnostics", href: "/docs/spec/appendix/diagnostics" },
+  { label: "commands", href: "/docs/guide/commands" },
+  { label: "wowlua.json", href: "/docs/reference/manifest" },
+  { label: "errors and warnings", href: "/docs/reference/diagnostics" },
 ];
 
 /** The phone menu: a full-screen sheet over the page, opened from the header's menu button. */

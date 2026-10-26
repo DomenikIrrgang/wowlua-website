@@ -5,8 +5,8 @@ import { useEffect, useRef, useState } from "react";
 const KINDS = ["all", "added", "changed", "fixed"] as const;
 
 /**
- * The changelog's "show" buttons: hide every section but one kind. On phones the buttons stick under the header,
- * and releases marked data-older wait behind a "show … and older" button (`older` names the first of them).
+ * The changelog's "show" buttons: hide every section but one kind; on phones they stick under the header.
+ * Releases marked data-older wait behind a "show … and older" button (`older` names the first of them).
  */
 export function ChangelogFilter({ latest, older, children }: { latest: string; older?: string; children: React.ReactNode }) {
   const [kind, setKind] = useState<(typeof KINDS)[number]>("all");

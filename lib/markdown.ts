@@ -1,6 +1,9 @@
 // Renders the wowlua repository's Markdown with the design system's markup:
 // links between repo files become site links, code blocks become .wl-code
-// figures, tables .wl-table regions, GitHub alerts .wl-callout boxes.
+// figures (```console a terminal, compiler output a .wl-diag block), tables
+// .wl-table regions, GitHub alerts .wl-callout boxes, and ordered lists of
+// `**Title** text `command`` items numbered steps. wowlua's CLAUDE.md lists
+// these conventions for the docs' authors.
 import type { Element, ElementContent, Root } from "hast";
 import { toString } from "hast-util-to-string";
 import path from "node:path";
@@ -87,16 +90,17 @@ function rehypeDesign(ctx: Ctx, out: { title: string | null; description: string
           const cls = (code.properties.className as string[] | undefined) ?? [];
           const lang = (cls.find((c) => c.startsWith("language-")) ?? "").replace("language-", "");
           const text = toString(code).replace(/\n$/, "");
-          // Phones wrap long code lines, except in file trees, whose columns only read unbroken.
-          const tree = /[├└]──/.test(text) ? " data-nowrap" : "";
-          (parent as Element).children[index] = {
-            type: "raw",
-            value:
-              `<figure class="wl-code md-code"${tree}><div class="wl-code__bar"><span class="wl-code__lang">${escapeHtml(lang || "text")}</span>` +
-              `<button class="wl-textbtn" type="button" data-copy>copy</button></div>` +
-              `<pre class="wl-code__pre"><code>${highlight(text, lang)}</code></pre></figure>`,
-          } as unknown as ElementContent;
+          const meta = attrs(String((code.data as { meta?: string } | undefined)?.meta ?? ""));
+          (parent as Element).children[index] = { type: "raw", value: codeBlock(lang, text, meta) } as unknown as ElementContent;
           return "skip";
+        }
+        case "ol": {
+          const steps = stepsOf(node);
+          if (steps && parent && index !== undefined) {
+            (parent as Element).children[index] = { type: "raw", value: steps } as unknown as ElementContent;
+            return "skip";
+          }
+          break;
         }
         case "table": {
           if (!parent || index === undefined) break;
@@ -133,6 +137,109 @@ function rehypeDesign(ctx: Ctx, out: { title: string | null; description: string
       }
     });
   };
+}
+
+/** The words after a code block's language: `title=src/main.wowlua fragment` → { title: "src/main.wowlua", fragment: "" }. */
+function attrs(meta: string): Record<string, string> {
+  return Object.fromEntries(meta.split(/\s+/).filter(Boolean).map((w) => (w.includes("=") ? [w.slice(0, w.indexOf("=")), w.slice(w.indexOf("=") + 1)] : [w, ""])));
+}
+
+/** A copy button: the block's text, or `text` when given (components/Enhance.tsx). */
+const copy = (text?: string) => `<button class="wl-textbtn" type="button" data-copy${text ? `="${escapeHtml(text).replace(/"/g, "&quot;")}"` : ""}>copy</button>`;
+
+/** A fenced block: a terminal for `console`, compiler output for `text` that starts with a diagnostic, code otherwise. */
+function codeBlock(lang: string, text: string, meta: Record<string, string>): string {
+  const title = meta.title ? `<span class="wl-code__file">${escapeHtml(meta.title)}</span>` : "";
+  if (lang === "console") {
+    return (
+      `<figure class="wl-term md-term"><div class="wl-term__bar"><span>${escapeHtml(meta.title ?? "terminal")}</span>${copy(commands(text))}</div>` +
+      `<pre class="wl-term__body">${text.split("\n").map(termLine).join("\n")}</pre></figure>`
+    );
+  }
+  if (lang === "text" && /^(error|warning)(\[[EWP]\d{4}\])?:/.test(text)) return `<pre class="wl-diag md-diag">${diagHtml(text)}</pre>`;
+  // Phones wrap long code lines, except in file trees, whose columns only read unbroken.
+  const tree = /[├└]──/.test(text) ? " data-nowrap" : "";
+  return (
+    `<figure class="wl-code md-code"${tree}><div class="wl-code__bar">${title}<span class="wl-code__lang">${escapeHtml(lang || "text")}</span>${copy()}</div>` +
+    `<pre class="wl-code__pre"><code>${highlight(text, lang)}</code></pre></figure>`
+  );
+}
+
+/** A terminal's commands, without prompts and comments: what its copy button copies. */
+const commands = (text: string) =>
+  text
+    .split("\n")
+    .map((l) => /^\$ ?(.*?)(\s+#.*)?$/.exec(l)?.[1])
+    .filter(Boolean)
+    .join("\n");
+
+/** `$ wowlua test  # comment` is a command; other lines are its output, with cargo-style status words and test marks coloured. */
+function termLine(line: string): string {
+  const cmd = /^\$ ?(.*?)(\s+#.*)?$/.exec(line);
+  if (cmd) {
+    const comment = cmd[2] ? `<span class="wl-term__comment">${escapeHtml(cmd[2])}</span>` : "";
+    return `<span class="wl-term__prompt">$</span> <span class="wl-term__cmd">${escapeHtml(cmd[1])}</span>${comment}`;
+  }
+  const out = escapeHtml(line)
+    .replace(/^(\s*)(FAIL|✗|error(?:\[\w+\])?:?)(?=\s|$)/, '$1<span class="wl-term__err">$2</span>')
+    .replace(/^(\s*)(PASS|✓|[A-Z][a-z]+)(?=\s)/, (m, sp, w) => (/^[A-Z][a-z]+$/.test(w) && sp.length < 2 ? m : `${sp}<span class="wl-term__ok">${w}</span>`));
+  return `<span class="wl-term__out">${out}</span>`;
+}
+
+/** Compiler output, coloured as the terminal prints it. */
+export function diagHtml(text: string): string {
+  return text.split("\n").map(diagLine).join("\n");
+}
+
+/** One line of compiler output, coloured as the terminal prints it. */
+function diagLine(line: string): string {
+  const head = /^(error|warning)(\[[EWP]\d{4}\])?(:.*)$/.exec(line);
+  if (head) return `<span class="wl-diag__${head[1]}">${head[1]}${head[2] ?? ""}</span><span class="wl-diag__msg">${escapeHtml(head[3])}</span>`;
+  const gutter = /^(\s*(?:\d+\s)?(?:│|┌─|└─|╭─|╰─|\|))(.*)$/.exec(line);
+  if (gutter) {
+    const rest = escapeHtml(gutter[2]).replace(/([\^~-]{1,}.*)$/, (m) => (/^[\^~]/.test(m.trim()) ? `<span class="wl-diag__error">${m}</span>` : m));
+    return `<span class="wl-diag__gutter">${escapeHtml(gutter[1])}</span>${rest}`;
+  }
+  const help = /^(\s*=\s*)(help|note)(:.*)$/.exec(line);
+  if (help) return `${escapeHtml(help[1])}<span class="wl-diag__${help[2]}">${help[2]}</span>${escapeHtml(help[3])}`;
+  return escapeHtml(line);
+}
+
+/**
+ * An ordered list whose every item is `**Title**`, a sentence and an inline `command`: numbered steps. Any other
+ * ordered list stays a list.
+ */
+function stepsOf(ol: Element): string | null {
+  const items = ol.children.filter((c): c is Element => c.type === "element" && c.tagName === "li");
+  if (!items.length) return null;
+  const parts = items.map((li) => {
+    // A loose list wraps the item's content in a paragraph.
+    const inline = li.children.length === 1 && (li.children[0] as Element).tagName === "p" ? (li.children[0] as Element).children : li.children;
+    const kids = inline.filter((c) => !(c.type === "text" && !c.value.trim()));
+    const first = kids[0] as Element | undefined;
+    const last = kids.at(-1) as Element | undefined;
+    if (!first || first.type !== "element" || first.tagName !== "strong") return null;
+    if (!last || last.type !== "element" || last.tagName !== "code" || kids.length < 3) return null;
+    const middle = kids.slice(1, -1);
+    const html = middle
+      .map((c) => (c.type === "text" ? escapeHtml(c.value) : c.type === "element" && c.tagName === "code" ? `<code class="wl-icode">${escapeHtml(toString(c))}</code>` : escapeHtml(toString(c as Element))))
+      .join("")
+      .replace(/^[\s—:.-]+/, "")
+      .replace(/[\s:]+$/, "");
+    return { title: toString(first), text: html, cmd: toString(last) };
+  });
+  if (parts.some((p) => !p)) return null;
+  return (
+    `<ol class="wl-steps md-steps">` +
+    parts
+      .map(
+        (p) =>
+          `<li class="wl-steps__item"><h3 class="wl-steps__title">${escapeHtml(p!.title)}</h3><p class="wl-steps__text">${p!.text}</p>` +
+          `<div class="wl-steps__cmd"><code><span class="wl-term__prompt">$</span>${escapeHtml(p!.cmd)}</code>${copy(p!.cmd)}</div></li>`,
+      )
+      .join("") +
+    `</ol>`
+  );
 }
 
 /** At most ~160 characters, ending at a sentence or word boundary. */

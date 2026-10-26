@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { ogMetadata } from "@/lib/og";
-import Link from "next/link";
 import { ChangelogFilter } from "@/components/ChangelogFilter";
 import { Disclosure } from "@/components/news/Disclosure";
-import { changelog } from "@/lib/changelog";
-import { REPO_URL, githubUrl, latestRelease, unreleased } from "@/lib/content";
+import { changelog, type Entry } from "@/lib/changelog";
+import { REPO_URL, latestRelease, unreleased } from "@/lib/content";
 import { isoDay } from "@/lib/format";
 import { renderMarkdown } from "@/lib/markdown";
-import { milestones } from "@/lib/roadmap";
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -17,18 +15,49 @@ export const metadata: Metadata = {
 
 const md = async (text: string) => (text ? (await renderMarkdown(text, { version: "main", repoPath: "CHANGELOG.md" })).html : "");
 
-// Phones list this many entries and keep the older ones behind a button.
-const PHONE_SHOWN = 9;
+// The newest minor versions are listed in full, the next ones as one line each, older ones wait behind a button.
+const FULL_MINORS = 4;
+const BRIEF_MINORS = 3;
+// A minor version with more patch releases than this lists them as one line each.
+const MAX_FULL_PATCHES = 3;
+
+const minorOf = (version: string) => version.split(".").slice(0, 2).join(".");
+const isPatch = (version: string) => !/\.0$/.test(version);
+
+/** "26 added, 51 changed, 29 fixed": the top-level entries of each section. */
+const counts = (e: Entry) =>
+  e.sections
+    .map((s) => `${(s.body.match(/^[-*] /gm) ?? []).length} ${s.title}`)
+    .filter((c) => !c.startsWith("0 "))
+    .join(", ");
 
 export default async function ChangelogPage() {
-  const { source, entries } = changelog();
+  const { entries } = changelog();
   const latest = latestRelease();
   const pending = unreleased();
-  const byRelease = new Map(milestones().filter((m) => m.release).map((m) => [m.release!, m.id]));
-  const inProgress = milestones().find((m) => m.status === "in progress");
-  const rendered = await Promise.all(entries.map(async (e) => ({ intro: await md(e.intro), sections: await Promise.all(e.sections.map((s) => md(s.body))) })));
+  const dateOf = (e: Entry) => e.date ?? "";
+
+  const minors = [...new Set(entries.flatMap((e) => (e.version ? [minorOf(e.version)] : [])))];
+  const patches = (minor: string) => entries.filter((e) => e.version && minorOf(e.version) === minor && isPatch(e.version)).length;
+  const layout = (e: Entry): "full" | "brief" | "older" => {
+    if (!e.version) return "full";
+    const rank = minors.indexOf(minorOf(e.version));
+    if (rank >= FULL_MINORS + BRIEF_MINORS) return "older";
+    if (rank >= FULL_MINORS) return "brief";
+    return isPatch(e.version) && patches(minorOf(e.version)) > MAX_FULL_PATCHES ? "brief" : "full";
+  };
+  const firstOlder = entries.find((e) => layout(e) === "older")?.version ?? undefined;
+
+  const rendered = await Promise.all(
+    entries.map(async (e) => ({
+      intro: await md(e.intro),
+      // A collapsed release's line: its intro's first paragraph.
+      brief: layout(e) === "full" ? "" : await md(e.intro.split(/\n\s*\n/)[0]),
+      sections: await Promise.all(e.sections.map((s) => md(s.body))),
+    })),
+  );
   const hasUnreleased = entries.some((e) => e.version === null);
-  const firstOlder = entries[PHONE_SHOWN]?.version ?? undefined;
+  const since = `on main, since ${pending.base?.replace(/^v/, "") ?? "the last release"}`;
 
   const commitsNote = pending.base && pending.total ? (
     <p className="caption" style={{ margin: "12px 0 0", color: "var(--ink-muted)" }}>
@@ -41,15 +70,8 @@ export default async function ChangelogPage() {
     <main className="page changelog-page" id="main" style={{ maxWidth: 1008 }}>
       <div className="page__head">
         <h1 className="display-l">Changelog</h1>
-        <p>
-          Every release of wowlua, newest first. Each minor version closes a milestone of the <Link href="/roadmap">roadmap</Link>. Binaries are on{" "}
-          <a href={`${REPO_URL()}/releases`}>GitHub Releases ↗</a>.
-          {source === "changelog" ? (
-            <>
-              {" "}
-              Read from <a href={githubUrl("main", "CHANGELOG.md")}>CHANGELOG.md</a>.
-            </>
-          ) : null}
+        <p style={{ maxWidth: "64ch" }}>
+          Every release of wowlua, newest first, written for addon authors. Binaries are on <a href={`${REPO_URL()}/releases`}>GitHub Releases ↗</a>.
         </p>
       </div>
 
@@ -60,15 +82,15 @@ export default async function ChangelogPage() {
             className="wl-release"
             id="unreleased"
             defaultOpen
-            summary={<ReleaseSummary version="unreleased" when={`since ${pending.base}`} released={false} />}
+            summary={<ReleaseSummary version="unreleased" when={since} released={false} />}
           >
             <div className="wl-release__meta">
               <h2 className="wl-release__version">
                 <a href="#unreleased">unreleased</a>
               </h2>
-              <span className="wl-release__date">since {pending.base}</span>
+              <span className="wl-release__date">{since}</span>
               <span>
-                <span className="wl-badge wl-badge--planned">in progress</span>
+                <span className="wl-badge wl-badge--planned">not released yet</span>
               </span>
             </div>
             <div className="wl-release__body">{commitsNote}</div>
@@ -76,59 +98,61 @@ export default async function ChangelogPage() {
         )}
         {entries.map((e, i) => {
           const id = e.version ? `v${e.version.replace(/\./g, "-")}` : "unreleased";
-          const milestone = e.version ? byRelease.get(e.version) : inProgress?.id;
-          const when = `${e.version ? e.date : `since ${pending.base ?? "the last release"}`}${milestone ? ` · ${milestone}` : ""}`;
-          const kinds = new Set(e.sections.map((s) => s.kind));
+          const when = e.version ? dateOf(e) : since;
+          const shown = layout(e);
+          const sections = e.sections;
+          const kinds = new Set(sections.map((s) => s.kind));
+          const brief = [rendered[i].brief.replace(/^<p>([\s\S]*)<\/p>\s*$/, "$1"), counts(e) && `${counts(e)}.`].filter(Boolean).join(" ");
           return (
             <Disclosure
               as="article"
-              className="wl-release"
+              className={`wl-release${shown === "full" ? "" : " wl-release--collapsed"}`}
               id={id}
               key={id}
               defaultOpen={i < 2}
-              attrs={i >= PHONE_SHOWN ? { "data-older": "" } : undefined}
+              attrs={shown === "older" ? { "data-older": "" } : undefined}
               summary={<ReleaseSummary version={e.version ?? "unreleased"} when={when} released={!!e.version} />}
             >
               <div className="wl-release__meta">
                 <h2 className="wl-release__version">
                   <a href={`#${id}`}>{e.version ?? "unreleased"}</a>
                 </h2>
-                <span className="wl-release__date">
-                  {e.version ? e.date : `since ${pending.base ?? "the last release"}`}
-                  {milestone ? ` · ${milestone}` : ""}
-                </span>
+                <span className="wl-release__date">{when}</span>
                 <span>
-                  {e.version ? <span className="wl-badge wl-badge--done">released</span> : <span className="wl-badge wl-badge--planned">in progress</span>}
+                  {e.version ? <span className="wl-badge wl-badge--done">released</span> : <span className="wl-badge wl-badge--planned">not released yet</span>}
                 </span>
-                {e.url && (
-                  <a className="caption" href={e.url}>
-                    release on GitHub ↗
-                  </a>
-                )}
               </div>
               <div className="wl-release__body">
-                {rendered[i].intro && <div className="md release-intro" dangerouslySetInnerHTML={{ __html: rendered[i].intro }} />}
-                {e.sections.map((s, j) => (
-                  <section key={j} className={`wl-release__section wl-release__section--${s.kind}`} data-kind={s.kind}>
-                    <h3>{s.title}</h3>
-                    <div className="md release-list" dangerouslySetInnerHTML={{ __html: rendered[i].sections[j] }} />
-                  </section>
-                ))}
-                {/* Phones say so when the filter leaves a release empty. */}
-                {e.sections.length > 0 &&
-                  (["added", "changed", "fixed"] as const)
-                    .filter((k) => !kinds.has(k))
-                    .map((k) => (
-                      <p key={k} className="caption wl-release__none" data-kind={k}>
-                        no {k} entries in this release
-                      </p>
-                    ))}
-                {!e.version && commitsNote}
-                {e.url && (
-                  <a className="caption wl-release__gh" href={e.url}>
-                    release on GitHub ↗
-                  </a>
+                {/* A collapsed release: its intro and how many changes, until its link is followed (:target). */}
+                {shown !== "full" && (
+                  <p className="wl-release__brief">
+                    {brief && <span dangerouslySetInnerHTML={{ __html: brief }} />} <a href={`#${id}`}>Show all changes</a>
+                  </p>
                 )}
+                <div className="wl-release__full">
+                  {rendered[i].intro && <div className="md release-intro" dangerouslySetInnerHTML={{ __html: rendered[i].intro }} />}
+                  {sections.map((s, j) => (
+                    <section key={j} className={`wl-release__section wl-release__section--${s.kind}`} data-kind={s.kind}>
+                      <h3>{s.title}</h3>
+                      <div className="md release-list" dangerouslySetInnerHTML={{ __html: rendered[i].sections[j] }} />
+                    </section>
+                  ))}
+                  {/* Phones say so when the filter leaves a release empty. */}
+                  {sections.length > 0 &&
+                    (["added", "changed", "fixed"] as const)
+                      .filter((k) => !kinds.has(k))
+                      .map((k) => (
+                        <p key={k} className="caption wl-release__none" data-kind={k}>
+                          no {k} entries in this release
+                        </p>
+                      ))}
+                  {!e.version && commitsNote}
+                  {e.url && (
+                    <a className="caption wl-release__gh" href={e.url}>
+                      release on GitHub ↗
+                    </a>
+                  )}
+                </div>
               </div>
             </Disclosure>
           );
@@ -138,13 +162,13 @@ export default async function ChangelogPage() {
   );
 }
 
-/** A release's row in the phone accordion: version, date, milestone and status. */
+/** A release's row in the phone accordion: version, date and status. */
 function ReleaseSummary({ version, when, released }: { version: string; when: string; released: boolean }) {
   return (
     <span className="wl-release__summary">
       <span className="heading-2">{version}</span>
       <span className="caption" style={{ color: "var(--ink-muted)" }}>
-        {when} · <span style={{ color: released ? "var(--success)" : "var(--note)" }}>{released ? "released" : "in progress"}</span>
+        {when} · <span style={{ color: released ? "var(--success)" : "var(--note)" }}>{released ? "released" : "not released yet"}</span>
       </span>
     </span>
   );

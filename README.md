@@ -12,18 +12,21 @@ needs no change, build or deploy here; new docs versions, pages and diagnostic c
 
 | On the site | From the wowlua repository |
 | --- | --- |
-| `/docs` guide pages | `docs/*.md`; the sidebar follows the list in `docs/README.md` |
-| `/docs/spec/…` reference | `spec/**/*.md`; the sidebar follows the table in `spec/README.md` |
-| `/docs/diagnostics/<code>` | the tables in `spec/appendix/diagnostics.md`, plus the spec sections that mention each code |
-| the docs version picker | `main`, plus the newest release of each minor version (GitHub releases) |
+| `/docs/…` pages | `docs/**/*.md` (`docs/guide/install.md` is `/docs/guide/install`); the sidebar follows the `##` sections and links of `docs/README.md` |
+| `/docs/reference/diagnostics` and `/docs/reference/diagnostics/<code>` | the code tables in `spec/appendix/diagnostics.md`, and each code's explanation and examples in `docs/reference/diagnostics.json` (`cargo xtask diagnostics`) |
+| the docs version picker | `main`, plus the newest release of each minor version whose `docs/README.md` has sections (GitHub releases) |
 | `/changelog` | `CHANGELOG.md` on main (GitHub release notes if it is missing), commits on main since the last release |
-| `/roadmap` | `spec/roadmap.md`: milestones, status lines, exit criteria, stages |
-| landing page facts | `README.md`: intro, install commands, sample diagnostic, the four tools table, debugging list |
+| `/community` | `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` (linked when they exist), the README's Developing commands, the latest release's changelog |
+| landing page facts | `README.md`: intro, install commands, quick start, adoption count, debugging list; the module count from `docs/stdlib/overview.md` |
+
+The specification (`spec/`) is not a part of the site: links to it go to GitHub, and the old `/docs/spec/…`, `/roadmap`
+and `/packages` addresses redirect to the nearest docs page (`next.config.ts`). wowlua's `CLAUDE.md` lists the Markdown
+the site draws as terminals, compiler output and numbered steps (`lib/markdown.ts`).
 
 Owned by this repository:
 
-- the landing page layout and its headlines (`app/page.tsx`), and the terminal and `clamp` samples recorded from the
-  compiler;
+- the landing page layout and its headlines (`app/page.tsx`), and the code, terminal and editor samples recorded
+  from the compiler (`components/landing/`);
 - blog posts, `content/blog/*.md` (front matter: `title`, `date`, `summary`, optional `author`, `tags`, `version`).
   Releases appear in the blog list and the RSS feed (`/blog/rss.xml`) on their own;
 - the showcase, `content/showcase/*.json`;
@@ -44,8 +47,9 @@ npm run content        # refresh the content from GitHub
 npm run build          # fetch, then prerender every page
 ```
 
-`scripts/fetch-content.mjs` downloads `README.md`, `CHANGELOG.md`, `docs/`, `spec/` and `examples/` of each docs
-version, plus the releases and the commits since the last one (`scripts/content-sync.mjs`). Each download is a snapshot
+`scripts/fetch-content.mjs` downloads `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `docs/`,
+`spec/` and `examples/` of each docs version, plus the releases and the commits since the last one
+(`scripts/content-sync.mjs`). Each download is a snapshot
 in `content/.store/`; `content/.cache` points at the current one (neither is committed). The production server runs the
 same sync on its own (`instrumentation.ts`). Environment:
 

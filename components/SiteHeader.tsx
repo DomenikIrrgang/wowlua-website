@@ -9,19 +9,15 @@ import { openSearch } from "./SearchPalette";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV = [
-  { label: "docs", href: "/docs", match: (p: string) => p.startsWith("/docs") && !isStdlib(p) && !isCli(p) },
-  { label: "stdlib", href: "/docs/spec/stdlib", match: isStdlib },
-  { label: "cli", href: "/docs/spec/toolchain/cli", match: isCli },
+  { label: "home", href: "/", match: (p: string) => p === "/" },
+  { label: "docs", href: "/docs/guide/getting-started", match: (p: string) => p.startsWith("/docs") && !isApi(p) },
+  { label: "api", href: "/api", match: isApi },
   { label: "playground", href: "/playground", match: (p: string) => p.startsWith("/playground") },
-  { label: "packages", href: "/packages", match: (p: string) => p.startsWith("/packages") },
   { label: "blog", href: "/blog", match: (p: string) => p.startsWith("/blog") },
 ];
 
-function isStdlib(p: string) {
-  return /^\/docs(\/\d+\.\d+)?\/spec\/stdlib/.test(p);
-}
-function isCli(p: string) {
-  return /^\/docs(\/\d+\.\d+)?\/spec\/toolchain\/cli/.test(p);
+function isApi(p: string) {
+  return p.startsWith("/api") || /^\/docs(\/\d+\.\d+)?\/reference\/api$/.test(p);
 }
 
 export function SiteHeader({ version, repoUrl, discordUrl }: { version: string | null; repoUrl: string; discordUrl: string }) {

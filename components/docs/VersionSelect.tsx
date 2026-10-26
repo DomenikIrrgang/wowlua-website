@@ -19,7 +19,7 @@ export function VersionSelect({ id, value, options }: { id: string; value: strin
           const next = e.target.value;
           const rest = pathname.replace(/^\/docs(\/\d+\.\d+)?/, "");
           const base = next === "main" ? "/docs" : `/docs/${next}`;
-          const target = `${base}${rest.startsWith("/diagnostics/") ? "/spec/appendix/diagnostics" : rest}`;
+          const target = `${base}${rest.startsWith("/reference/diagnostics/") ? "/reference/diagnostics" : rest}`;
           // Fall back to that version's start page when this page did not exist yet.
           const ok = await fetch(target, { method: "HEAD" }).then((r) => r.ok, () => false);
           router.push(ok ? target : base);

@@ -1,4 +1,5 @@
-// Facts for the landing page, read from wowlua's README so they change with it.
+// Facts for the landing page, read from wowlua's README (and the standard
+// library overview) so they change with them.
 import { cache } from "react";
 import { readRepoFile } from "./content";
 
@@ -55,16 +56,6 @@ export const taste = cache(() => {
   return { code: f.find((x) => x.lang === "lua" || x.lang === "wowlua")?.code ?? "", output: f.find((x) => x.lang === "text")?.code ?? "" };
 });
 
-/** "Four tools, one binary": label → description. */
-export const tools = cache(() => {
-  const rows: { label: string; text: string }[] = [];
-  for (const line of section("Four tools, one binary").split("\n")) {
-    const m = /^\|\s*\*\*(.+?)\*\*\s*\|\s*(.+?)\s*\|$/.exec(line);
-    if (m) rows.push({ label: m[1], text: m[2] });
-  }
-  return rows;
-});
-
 /** "Debugging in game": its bullet list. */
 export const debugging = cache(() =>
   section("Debugging in game")
@@ -81,3 +72,28 @@ export const bringYourAddon = cache(() => {
 
 /** The README's "Developing" commands. */
 export const developing = cache(() => fences(section("Developing"))[0]?.code ?? "");
+
+/** How many addons the README says adopted builds are checked on ("checked on 36 addons"), or null. */
+export const adoptionChecked = cache(() => {
+  const m = /checked\s+on\s+(\d+)\s+addons/i.exec(section("Bring your addon").replace(/\s+/g, " "));
+  return m ? Number(m[1]) : null;
+});
+
+/** The README's "Quick start" commands, each with its `# comment`. */
+export const quickStart = cache(() =>
+  (fences(section("Quick start"))[0]?.code ?? "")
+    .split("\n")
+    .map((l) => /^(.*?)\s*(?:#\s*(.*))?$/.exec(l.trim())!)
+    .filter((m) => m[1])
+    .map((m) => ({ cmd: m[1], comment: m[2] ?? "" })),
+);
+
+/** The `wowlua:*` modules the standard library overview (docs/stdlib/overview.md) lists in its tables. */
+export const stdlibModules = cache(() => {
+  const md = readRepoFile("main", "docs/stdlib/overview.md") ?? "";
+  const names = md
+    .split("\n")
+    .filter((l) => l.startsWith("| `wowlua:"))
+    .flatMap((l) => [...l.split("|")[1].matchAll(/`(wowlua:[\w-]+)`/g)].map((m) => m[1]));
+  return [...new Set(names)];
+});

@@ -1,148 +1,215 @@
 import type { Metadata } from "next";
 import { ogMetadata } from "@/lib/og";
 import Link from "next/link";
-import { DISCORD_URL, REPO_URL, githubUrl } from "@/lib/content";
-import { highlight } from "@/lib/highlight";
-import { developing } from "@/lib/readme";
-import { milestones, roadmapSummary } from "@/lib/roadmap";
+import { changelog } from "@/lib/changelog";
+import { DISCORD_URL, REPO_URL, githubUrl, latestRelease, readRepoFile } from "@/lib/content";
+import { shortVersion } from "@/lib/format";
+import { installCommands, developing } from "@/lib/readme";
 
 export const metadata: Metadata = {
   title: "Community",
-  description: "wowlua is MIT-licensed and developed on GitHub: report bugs, follow the roadmap, contribute, ask on Discord.",
-  ...ogMetadata("/community", "Community", "wowlua is MIT-licensed and developed on GitHub: report bugs, follow the roadmap, contribute, ask on Discord."),
+  description: "wowlua is MIT-licensed and developed on GitHub: ask on Discord, report bugs as issues, send pull requests.",
+  ...ogMetadata("/community", "Community", "wowlua is MIT-licensed and developed on GitHub: ask on Discord, report bugs as issues, send pull requests."),
 };
 
+// "What's new" names at most this many of the latest minor version's headline entries.
+const NEWS_NAMES = 4;
+
+/** The latest minor version and the names of its bold-led CHANGELOG entries ("- **Debugger**: …"), oldest release first.
+ *  "VS Code: Testing view" counts as "VS Code". */
+function whatsNew(): { minor: string; names: string[] } | null {
+  const latest = latestRelease();
+  if (!latest) return null;
+  const minor = shortVersion(latest.tag);
+  const names = changelog()
+    .entries.filter((e) => e.version && shortVersion(e.version) === minor)
+    .reverse()
+    .flatMap((e) => e.sections.flatMap((s) => [...s.body.matchAll(/^[-*] \*\*(.+?)\*\*/gm)].map((m) => m[1].split(": ")[0].replace(/[:.]$/, ""))));
+  return { minor, names: [...new Set(names)] };
+}
+
+// "Debugger" reads as "debugger" inside a sentence; "VS Code" and "wowlua" stay as they are.
+const inSentence = (name: string) => (/^[A-Z][a-z]/.test(name) ? name[0].toLowerCase() + name.slice(1) : name);
+
+const list = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
+
+/** The README's one-line "Developing" commands, each with its comment. */
+function devCommands(): { cmd: string; comment: string }[] {
+  const lines = developing().split("\n");
+  return lines.flatMap((line, i) => {
+    // Commands whose comment continues on the next lines are left out of the short list.
+    if (!line.trim() || /^\s/.test(line) || /^\s+#/.test(lines[i + 1] ?? "")) return [];
+    const m = /^(.*?\S)(\s+#.*)?$/.exec(line)!;
+    return [{ cmd: m[1], comment: m[2] ?? "" }];
+  });
+}
+
+const Prompt = ({ cmd, comment = "" }: { cmd: string; comment?: string }) => (
+  <>
+    <span className="wl-term__prompt">$</span> <span className="wl-term__cmd">{cmd}</span>
+    {comment && (
+      <>
+        {comment.slice(0, comment.indexOf("#"))}
+        <span className="wl-term__comment">{comment.slice(comment.indexOf("#"))}</span>
+      </>
+    )}
+  </>
+);
+
 export default function CommunityPage() {
-  const dev = developing();
-  const ms = milestones();
-  const lastDone = ms.filter((m) => m.status === "done").at(-1);
-  const doing = ms.filter((m) => m.status === "in progress");
+  const news = whatsNew();
+  // "Needs Rust 1.96 or newer and a clone of the repository." → "1.96 or newer"
+  const rust = installCommands().find((c) => c.id === "source")?.note.match(/Rust (\S+ or newer)/)?.[1];
+  const dev = devCommands();
+  // Shown only once the wowlua repository has them.
+  const guides = [
+    { file: "CONTRIBUTING.md", label: "contributing guide" },
+    { file: "CODE_OF_CONDUCT.md", label: "code of conduct" },
+  ].filter((g) => readRepoFile("main", g.file) !== null);
+  const links = (items: [string, string][], arrow = true) => (
+    <ul className="community__links">
+      {items.map(([href, label]) => (
+        <li key={href}>
+          <a href={href}>
+            <span>{label}</span> {arrow && <span aria-hidden="true">↗</span>}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <main className="page community-page" id="main" style={{ maxWidth: "var(--size-page)" }}>
-      <div className="page__head">
+      <header className="page__head">
         <span className="label" style={{ color: "var(--amber-ink)" }}>
           [ community ]
         </span>
         <h1 className="display-l">Built in the open</h1>
-        <p>wowlua is MIT-licensed and developed on GitHub. Report bugs as issues and send pull requests. Ask questions and show what you build on Discord.</p>
-      </div>
+        <p className="body-l" style={{ maxWidth: "60ch" }}>
+          wowlua is MIT-licensed and developed on GitHub. Ask questions on Discord, report bugs as issues, and send pull requests.
+        </p>
+      </header>
 
-      <div className="community-grid">
-        <section className="landing-card">
+      <section className="community-grid" aria-label="Channels">
+        <article className="community-card">
           <h2 className="heading-2" style={{ margin: 0 }}>
             GitHub
           </h2>
           <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }}>
-            The source, the specification in <code className="wl-icode">spec/</code>, releases and the issue tracker.
+            The source, the sample addons in <code className="wl-icode">examples/</code>, the VS Code extension, releases and the issue tracker.
           </p>
-          <div className="showcase__links caption">
-            <a href={REPO_URL()}>
-              <span>{REPO_URL().replace("https://github.com/", "")}</span> <span aria-hidden="true">↗</span>
-            </a>
-            <a href={`${REPO_URL()}/issues`}>
-              <span>issues</span> <span aria-hidden="true">↗</span>
-            </a>
-            <a href={`${REPO_URL()}/releases`}>
-              <span>releases</span> <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-        </section>
-        <section className="landing-card">
+          {links([
+            [REPO_URL(), REPO_URL().replace("https://github.com/", "")],
+            [`${REPO_URL()}/issues`, "issues"],
+            [`${REPO_URL()}/releases`, "releases"],
+          ])}
+        </article>
+        <article className="community-card">
           <h2 className="heading-2" style={{ margin: 0 }}>
             Discord
           </h2>
           <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }}>
-            Questions in <code className="wl-icode">#help</code>, AddOns built with wowlua in <code className="wl-icode">#showcase</code>, and every release as it ships.
+            Help with your addon, migration questions, and what people are building.
           </p>
-          <div className="showcase__links caption community__discord">
-            <a href={DISCORD_URL}>{DISCORD_URL.replace("https://", "")} ↗</a>
-          </div>
           <a className="wl-btn wl-btn--primary community__join" href={DISCORD_URL}>
             join the server ↗
           </a>
-        </section>
-        <section className="landing-card">
+          <span className="caption community__discord" style={{ color: "var(--ink-muted)" }}>
+            {DISCORD_URL.replace("https://", "")}
+          </span>
+        </article>
+        <article className="community-card">
           <h2 className="heading-2" style={{ margin: 0 }}>
-            Roadmap
+            What&apos;s new
           </h2>
           <p className="body-s" style={{ margin: 0, color: "var(--ink-muted)" }}>
-            {roadmapSummary()}
+            {news && news.names.length > 0 && (
+              <>
+                {news.minor} brought {list(news.names.slice(0, NEWS_NAMES).map(inSentence).concat(news.names.length > NEWS_NAMES ? ["more"] : []))}.{" "}
+              </>
+            )}
+            Every release is posted to Discord with its changelog.
           </p>
-          {(lastDone || doing.length > 0) && (
-            <div className="wl-badge-row community__status">
-              {lastDone && (
-                <span className="wl-badge wl-badge--done">
-                  <span className="wl-badge__dot" aria-hidden="true" />
-                  {lastDone.id} done
-                </span>
-              )}
-              {doing.map((m) => (
-                <span key={m.id} className="wl-badge wl-badge--planned">
-                  <span className="wl-badge__dot" aria-hidden="true" />
-                  {m.id} in progress
-                </span>
-              ))}
-            </div>
-          )}
-          <Link href="/roadmap" className="caption community__more">
-            see the roadmap →
-          </Link>
-        </section>
-      </div>
+          <div className="community__more-links">
+            <Link href="/changelog" className="community__more">
+              <span>read the changelog</span> <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/blog" className="community__more">
+              <span>release notes on the blog</span> <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </article>
+      </section>
 
-      <section className="community-split community__bugs" aria-labelledby="bugs">
-        <div style={{ display: "grid", gap: 12, alignContent: "start" }}>
+      <section className="community-split" aria-labelledby="bugs">
+        <div className="community-split__text">
           <h2 id="bugs" className="heading-1" style={{ margin: 0 }}>
             Report a bug
           </h2>
-          <p style={{ margin: 0, color: "var(--ink-muted)" }}>
+          <p className="body" style={{ margin: 0 }}>
             Include the wowlua version, the command you ran and the full output. For an error you saw in game, map it back to your source first:{" "}
-            <code className="wl-icode">wowlua trace</code> reads the message and stack from the error frame or BugSack and prints the source lines and functions.
+            <code className="wl-icode">wowlua trace</code> reads the message and stack from the error frame or your error display addon and prints the source lines and functions.
           </p>
-          <a className="community__cta" href={`${REPO_URL()}/issues/new`}>
+          <aside className="wl-callout wl-callout--tip" aria-label="tip">
+            <div className="wl-callout__head">
+              <span className="wl-callout__glyph" aria-hidden="true">
+                +
+              </span>
+              tip:
+            </div>
+            <div className="wl-callout__body">
+              <p>
+                Copy the error in game, then run <code className="wl-icode">wowlua trace --clipboard</code>. Dev builds keep line numbers, so locations point at your{" "}
+                <code className="wl-icode">.wowlua</code> files directly.
+              </p>
+            </div>
+          </aside>
+          <a className="wl-btn wl-btn--secondary community__cta" href={`${REPO_URL()}/issues/new`}>
             open an issue ↗
           </a>
         </div>
-        <figure className="wl-term" style={{ margin: 0 }}>
+        <figure className="wl-term">
           <div className="wl-term__bar">
             <span>~/MyAddon</span>
-            <span>sh</span>
+            <span>zsh</span>
           </div>
           <pre className="wl-term__body">
-            <span className="wl-term__prompt">$</span> <span className="wl-term__cmd">wowlua --version</span>
+            <Prompt cmd="wowlua --version" />
             {"\n"}
-            <span className="wl-term__prompt">$</span> <span className="wl-term__cmd">wowlua trace error.txt</span>
-            {"   "}
-            <span className="wl-term__comment"># an error saved from the game</span>
+            <Prompt cmd="wowlua trace --clipboard" comment="     # an error copied from the game" />
+            {"\n"}
+            <Prompt cmd="wowlua trace error.txt" comment="       # or a saved file" />
           </pre>
         </figure>
       </section>
 
-      {dev && (
-        <section className="community-split" aria-labelledby="contribute">
-          <div style={{ display: "grid", gap: 12, alignContent: "start" }}>
-            <h2 id="contribute" className="heading-1" style={{ margin: 0 }}>
-              Contribute
-            </h2>
-            <p style={{ margin: 0, color: "var(--ink-muted)" }}>
-              The specification in <code className="wl-icode">spec/</code> is normative: behaviour changes start there, and diagnostic codes are generated from{" "}
-              <code className="wl-icode">spec/appendix/diagnostics.md</code>. Design decisions are in the <Link href="/docs/spec/appendix/decisions">decision log</Link>.
-            </p>
-            <a className="community__row" href={githubUrl("main", "README.md") + "#developing"}>
-              <span>developing, in the README</span> <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-          <figure className="wl-code" style={{ margin: 0 }}>
-            <div className="wl-code__bar">
-              <span className="wl-code__file">~/wowlua</span>
-              <span className="wl-code__lang">sh</span>
+      <section className="community-split community-split--rule" aria-labelledby="contribute">
+        <div className="community-split__text">
+          <h2 id="contribute" className="heading-1" style={{ margin: 0 }}>
+            Contribute
+          </h2>
+          <p className="body" style={{ margin: 0 }}>
+            wowlua is written in Rust{rust ? ` (${rust})` : ""}. Open an issue before a larger change so we can agree on the behaviour first; every change comes with tests.
+          </p>
+          {guides.length > 0 && links(guides.map((g) => [githubUrl("main", g.file), g.label]), false)}
+        </div>
+        {dev.length > 0 && (
+          <figure className="wl-term">
+            <div className="wl-term__bar">
+              <span>~/wowlua</span>
+              <span>zsh</span>
             </div>
-            <pre className="wl-code__pre">
-              <code dangerouslySetInnerHTML={{ __html: highlight(dev, "sh") }} />
+            <pre className="wl-term__body">
+              {dev.map((d, i) => (
+                <span key={i}>
+                  {i > 0 && "\n"}
+                  <Prompt cmd={d.cmd} comment={d.comment} />
+                </span>
+              ))}
             </pre>
           </figure>
-        </section>
-      )}
+        )}
+      </section>
     </main>
   );
 }

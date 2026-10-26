@@ -63,4 +63,4 @@ The rest: Inventorian, Plater, Masque, Mapster, Quartz, BugSack, SimulationCraft
 The check is static. It compares what the client would load, not how the addons behave once loaded. It runs weekly in CI as the `packager-compat` workflow, so a change that breaks equivalence shows up within a week.
 
 > [!TIP]
-> Moving your own addon? Start with the [adoption guide](/docs/adopting-an-addon). `init` leaves your packager workflows untouched and prints the change to `wowlua publish`.
+> Moving your own addon? Start with the [adoption guide](/docs/guide/adopting). `init` leaves your packager workflows untouched and prints the change to `wowlua publish`.

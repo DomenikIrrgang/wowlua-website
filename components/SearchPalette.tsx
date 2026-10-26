@@ -4,17 +4,18 @@ import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /** One searchable heading or page (built by app/search-index.json/route.ts). */
-export type SearchEntry = { t: string; u: string; g: string; p?: string; k: "page" | "h" };
+export type SearchEntry = { t: string; u: string; g: string; p?: string; k: "page" | "h" | "fn" | "event" | "method" | "ns" | "widget" };
 
-const ORDER = ["guide", "language", "standard library", "toolchain", "appendices", "diagnostics", "specification", "blog", "pages"];
+const ORDER = ["guide", "language", "standard library", "reference", "diagnostics", "wow api", "blog", "pages"];
 // Filter chips on phones: a group of the index, under a shorter label where it has one.
 const CHIPS: [string, string][] = [
   ["all", "all"],
   ["guide", "guide"],
   ["language", "language"],
   ["standard library", "stdlib"],
-  ["toolchain", "toolchain"],
+  ["reference", "reference"],
   ["diagnostics", "diagnostics"],
+  ["wow api", "wow api"],
   ["blog", "blog"],
 ];
 
@@ -27,11 +28,18 @@ function score(e: SearchEntry, q: string, group: string) {
   if (group !== "all" && e.g !== group) return 0;
   const t = e.t.toLowerCase();
   const p = (e.p ?? "").toLowerCase();
-  if (!q) return e.k === "page" && (group === "all" ? e.g === "guide" : true) ? 1 : 0;
+  // A WoW API filter with no query lists the namespaces, not every function.
+  if (!q) return (e.k === "page" || e.k === "ns") && (group === "all" ? e.g === "guide" : true) ? 1 : 0;
   if (t.startsWith(q)) return 4;
   if (t.includes(q)) return 3;
   if (p.includes(q)) return 1;
   return q.split(/\s+/).every((w) => t.includes(w) || p.includes(w)) ? 1 : 0;
+}
+
+/** Where a WoW API entry is, from its URL: "wow api · C_Container", "wow api · events". */
+function apiPath(u: string) {
+  const [, , first, rest] = u.split(/[/#]/);
+  return `wow api · ${rest === undefined ? "namespaces" : first}`;
 }
 
 function Marked({ text, q }: { text: string; q: string }) {
@@ -136,7 +144,7 @@ export function SearchPalette() {
   let n = -1;
   return (
     <div className="wl-search-scrim" onMouseDown={(e) => e.target === e.currentTarget && hide()}>
-      <div className="wl-search" role="dialog" aria-modal="true" aria-label="Search the docs">
+      <div className="wl-search" role="dialog" aria-modal="true" aria-label="Search the docs and the WoW API">
         <div className="wl-search__field">
           <span className="wl-search__prompt" aria-hidden="true">
             /
@@ -145,7 +153,7 @@ export function SearchPalette() {
             ref={input}
             className="wl-search__input"
             type="search"
-            placeholder="search docs, commands, modules, codes"
+            placeholder="search the docs and the WoW API"
             aria-label="search query"
             aria-controls="wl-search-res"
             autoComplete="off"
@@ -182,7 +190,7 @@ export function SearchPalette() {
             : q
               ? `${total} ${total === 1 ? "result" : "results"} for “${query.trim()}”`
               : group === "all"
-                ? "type to search the docs, stdlib, cli and diagnostics"
+                ? "type to search the docs, the error codes and the WoW API"
                 : `${total} pages`}
         </p>
         <div className="wl-search__results" id="wl-search-res" role="listbox" aria-label="results">
@@ -228,11 +236,11 @@ export function SearchPalette() {
                             go(e.u);
                           }}
                         >
-                          <span className="wl-search__kind">{e.k === "page" ? "page" : "#"}</span>
+                          <span className="wl-search__kind">{e.k === "h" ? "#" : e.k}</span>
                           <span className="wl-search__title">
                             <Marked text={e.t} q={q} />
                           </span>
-                          <span className="wl-search__path">{e.p ?? e.u}</span>
+                          <span className="wl-search__path">{e.p ?? (e.g === "wow api" ? apiPath(e.u) : e.u)}</span>
                         </a>
                       </li>
                     );

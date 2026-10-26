@@ -52,28 +52,34 @@ export default function ShowcasePage() {
   const list = entries();
   return (
     <main className="page showcase-page" id="main" style={{ maxWidth: "var(--size-page)" }}>
-      <div className="page__head">
-        <span className="label" style={{ color: "var(--amber-ink)" }}>
-          [ showcase ]
-        </span>
-        <h1 className="display-l">AddOns built with or moved to wowlua</h1>
-        <p>Projects whose authors added them to this page. Every entry is a file in the website&apos;s repository.</p>
-      </div>
-      <a className="wl-btn wl-btn--secondary showcase__to-submit" href="#submit">
-        submit your addon
-      </a>
+      <section className="showcase__intro" aria-labelledby="sc-title">
+        <div className="page__head">
+          <span className="label" style={{ color: "var(--amber-ink)" }}>
+            [ showcase ]
+          </span>
+          <h1 id="sc-title" className="display-l">
+            AddOns built with or moved to wowlua
+          </h1>
+          <p className="body-l" style={{ maxWidth: "60ch" }}>
+            Projects whose authors added them to this page. Every entry is a file in the website&apos;s repository.
+          </p>
+        </div>
+        <a className="wl-btn wl-btn--secondary showcase__to-submit" href="#submit">
+          submit your addon
+        </a>
+      </section>
 
       <ShowcaseList entries={list} />
 
-      <section className="showcase__submit" aria-labelledby="submit">
-        <div style={{ display: "grid", gap: 12, alignContent: "start" }}>
-          <h2 id="submit" className="heading-1" style={{ margin: 0 }}>
+      <section id="submit" className="showcase__submit" aria-labelledby="sc-submit">
+        <div className="showcase__submit-text">
+          <h2 id="sc-submit" className="heading-1" style={{ margin: 0 }}>
             Submit your addon
           </h2>
           <p style={{ margin: 0, color: "var(--ink-muted)" }}>
             Add one file to the website&apos;s repository and open a pull request. Your entry shows up with the next site build.
           </p>
-          <ol className="md showcase__steps" style={{ margin: 0 }}>
+          <ol className="showcase__steps">
             <li>
               Fork <a href={SITE_REPO}>DomenikIrrgang/wowlua-website ↗</a>.
             </li>

@@ -1,6 +1,7 @@
 // Reads the wowlua content fetched by scripts/fetch-content.mjs. Everything the
 // docs show comes from the wowlua repository: the sidebar is built from
-// docs/README.md and spec/README.md, the pages are its Markdown files.
+// docs/README.md, the pages are the Markdown files in docs/. The specification
+// (spec/) is not a part of the site; links to it go to GitHub.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { cache } from "react";
@@ -34,8 +35,11 @@ export const REPO_URL = () => `https://github.com/${meta().repo}`;
 /** The wowlua Discord server's permanent invite (made by github.com/DomenikIrrgang/wowlua-bot). */
 export const DISCORD_URL = "https://discord.gg/Dn795czPYk";
 
-/** Docs versions: "main" first, then one per minor line, newest first. */
-export const versions = (): Ref[] => meta().refs;
+/** Docs versions: "main" first, then one per minor line, newest first. Releases from before
+ *  docs/README.md had sections are left out: their docs are the specification. */
+export const versions = cache((): Ref[] =>
+  meta().refs.filter((r) => r.id === "main" || /^##\s/m.test(readRepoFile(r.id, "docs/README.md") ?? "")),
+);
 export const latestRelease = (): Release | undefined => releases().find((r) => !r.prerelease);
 export const isVersion = (s: string) => versions().some((v) => v.id === s && v.id !== "main");
 export const refOf = (version: string) => versions().find((v) => v.id === version)!;
@@ -51,7 +55,8 @@ export function readRepoFile(version: string, repoPath: string): string | null {
   return existsSync(file) ? readFileSync(file, "utf8") : null;
 }
 
-function listMarkdown(version: string, dir: string): string[] {
+/** The Markdown files under a folder of the repo, as repo paths. */
+export function listMarkdown(version: string, dir: string): string[] {
   const root = path.join(CACHE, version, dir);
   if (!existsSync(root)) return [];
   const out: string[] = [];
@@ -67,21 +72,17 @@ function listMarkdown(version: string, dir: string): string[] {
 }
 
 // ── Routes ──────────────────────────────────────────────────────────────────
-// docs/README.md            → /docs                  (versions: /docs/0.8)
-// docs/install.md           → /docs/install
-// spec/README.md            → /docs/spec
-// spec/language/03-classes.md → /docs/spec/language/classes
-// spec/roadmap.md           → /roadmap on main
+// docs/README.md             → /docs                (versions: /docs/0.13)
+// docs/guide/install.md      → /docs/guide/install
 
 const stripNumber = (s: string) => s.replace(/^\d+-/, "");
 
 export function slugForRepoPath(repoPath: string): string[] | null {
   const parts = repoPath.replace(/\.md$/, "").split("/");
-  const top = parts[0];
-  if (top !== "docs" && top !== "spec") return null;
+  if (parts[0] !== "docs") return null;
   const rest = parts.slice(1).map(stripNumber);
   if (rest[rest.length - 1] === "README") rest.pop();
-  return top === "docs" ? rest : ["spec", ...rest];
+  return rest;
 }
 
 export function docsHref(version: string, slug: string[]): string {
@@ -91,7 +92,8 @@ export function docsHref(version: string, slug: string[]): string {
 
 /** Site URL for a file of the wowlua repo, or null when it has no page. */
 export function hrefForRepoPath(version: string, repoPath: string): string | null {
-  if (version === "main" && repoPath === "spec/roadmap.md") return "/roadmap";
+  // The WoW API page's prose opens the reference at /api (next.config.ts redirects the docs address).
+  if (version === "main" && repoPath === "docs/reference/api.md") return "/api";
   const slug = slugForRepoPath(repoPath);
   if (!slug) return null;
   if (!pagesByKey(version).has(slug.join("/"))) return null;
@@ -106,7 +108,8 @@ export const githubUrl = (version: string, repoPath: string, dir = false) =>
 export type Page = { version: string; repoPath: string; slug: string[] };
 
 export const pages = cache((version: string): Page[] => {
-  const files = [...listMarkdown(version, "docs"), ...listMarkdown(version, "spec")];
+  // docs/reference/api/ holds the WoW API's data and notes, shown under /api, not as docs pages.
+  const files = listMarkdown(version, "docs").filter((f) => !f.startsWith("docs/reference/api/"));
   const out: Page[] = [];
   for (const repoPath of files) {
     const slug = slugForRepoPath(repoPath);
@@ -117,10 +120,7 @@ export const pages = cache((version: string): Page[] => {
 
 const pagesByKey = cache((version: string) => new Map(pages(version).map((p) => [p.slug.join("/"), p])));
 
-export const findPage = (version: string, slug: string[]) =>
-  pagesByKey(version).get(slug.join("/")) ??
-  // Versions from before docs/ existed open on the specification.
-  (slug.length === 0 ? pagesByKey(version).get("spec") : undefined);
+export const findPage = (version: string, slug: string[]) => pagesByKey(version).get(slug.join("/"));
 
 export type NavItem = { label: string; href: string; repoPath: string };
 export type NavSection = { title: string; items: NavItem[] };
@@ -139,59 +139,23 @@ function item(version: string, from: string, label: string, href: string): NavIt
   return url ? { label: plain(label).toLowerCase(), href: url, repoPath } : null;
 }
 
-/** Sidebar for a docs version, read from the repo's own indexes. */
+/** Sidebar for a docs version: the `## ` sections of docs/README.md and their lists of links. */
 export const sidebar = cache((version: string): NavSection[] => {
-  const sections: NavSection[] = [];
-
-  // docs/README.md: one list of links in reading order.
-  const docsIndex = readRepoFile(version, "docs/README.md");
-  if (docsIndex) {
-    const items: NavItem[] = [{ label: "overview", href: docsHref(version, []), repoPath: "docs/README.md" }];
-    for (const line of docsIndex.split("\n")) {
-      const m = /^\s*[-*]\s+/.test(line) && LINK.exec(line);
-      if (m) {
-        const it = item(version, "docs/README.md", m[1], m[2]);
-        if (it && !items.some((x) => x.href === it.href)) items.push(it);
-      }
+  const index = readRepoFile(version, "docs/README.md");
+  if (!index) return [];
+  // An index without sections (before the docs had them) is one guide.
+  const sections: NavSection[] = /^##\s/m.test(index) ? [] : [{ title: "guide", items: [] }];
+  for (const line of index.split("\n")) {
+    const heading = /^##\s+(.+)$/.exec(line);
+    if (heading) {
+      sections.push({ title: plain(heading[1]).toLowerCase(), items: [] });
+      continue;
     }
-    sections.push({ title: "guide", items });
-  }
-
-  // spec/README.md: a table of documents, grouped by bold rows.
-  const specIndex = readRepoFile(version, "spec/README.md");
-  if (specIndex) {
-    let current: NavSection = { title: "specification", items: [] };
-    if (hrefForRepoPath(version, "spec/README.md")) {
-      current.items.push({ label: "contents", href: docsHref(version, ["spec"]), repoPath: "spec/README.md" });
-    }
-    sections.push(current);
-    for (const line of specIndex.split("\n")) {
-      if (!line.startsWith("|")) continue;
-      const cells = line.split("|").slice(1, -1).map((c) => c.trim());
-      const group = cells.map((c) => /^\*\*(.+)\*\*$/.exec(c)?.[1]).find(Boolean);
-      if (group && !LINK.test(line)) {
-        current = { title: plain(group).toLowerCase(), items: [] };
-        sections.push(current);
-        continue;
-      }
-      const m = LINK.exec(line);
-      if (!m) continue;
-      const it = item(version, "spec/README.md", m[1], m[2]);
-      if (!it) continue;
-      if (it.repoPath === "spec/roadmap.md") continue; // linked from the header instead
-      if (it.repoPath === "spec/stdlib/README.md") it.label = "overview";
-      current.items.push(it);
-      // The standard library's chapters follow its overview.
-      if (it.repoPath === "spec/stdlib/README.md") {
-        for (const p of pages(version)) {
-          if (p.repoPath.startsWith("spec/stdlib/") && p.repoPath !== "spec/stdlib/README.md") {
-            const title = titleOf(readRepoFile(version, p.repoPath) ?? "") ?? p.slug.at(-1)!;
-            const label = plain(title).replace(/^[\d.]+\s*/, "").replace(/^standard library:\s*/i, "").toLowerCase();
-            current.items.push({ label, href: docsHref(version, p.slug), repoPath: p.repoPath });
-          }
-        }
-      }
-    }
+    const m = /^\s*[-*]\s+/.test(line) && LINK.exec(line);
+    const current = sections.at(-1);
+    if (!m || !current) continue;
+    const it = item(version, "docs/README.md", m[1], m[2]);
+    if (it && !sections.some((s) => s.items.some((x) => x.href === it.href))) current.items.push(it);
   }
   return sections.filter((s) => s.items.length);
 });

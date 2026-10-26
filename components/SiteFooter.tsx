@@ -4,29 +4,30 @@ import { LogoMark } from "./Logo";
 
 type L = { label: string; href: string };
 
-/** A docs link only when that page exists on main (docs/ pages arrive with wowlua's docs folder). */
+/** A docs link only when that page exists on main. */
 const docs = (label: string, slug: string[]): L[] => (findPage("main", slug) ? [{ label, href: `/docs/${slug.join("/")}` }] : []);
 
 export function SiteFooter() {
   const learn: L[] = [
-    { label: "guide", href: "/docs" },
-    ...docs("language", ["spec", "language", "syntax"]),
-    ...docs("standard library", ["spec", "stdlib"]),
-    { label: "playground", href: "/playground" },
-    ...docs("adopting an addon", ["adopting-an-addon"]),
+    ...docs("getting started", ["guide", "getting-started"]),
+    ...docs("language tour", ["language", "tour"]),
+    ...docs("standard library", ["stdlib", "overview"]),
+    ...docs("testing", ["guide", "testing"]),
+    ...docs("vs code", ["guide", "vscode"]),
+    ...docs("bring your addon", ["guide", "adopting"]),
   ];
   const reference: L[] = [
-    ...docs("cli", ["spec", "toolchain", "cli"]),
-    ...docs("wowlua.json", ["spec", "toolchain", "manifest"]),
-    ...docs("diagnostics", ["spec", "appendix", "diagnostics"]),
-    { label: "packages", href: "/packages" },
+    { label: "wow api", href: "/api" },
+    ...docs("commands", ["guide", "commands"]),
+    ...docs("wowlua.json", ["reference", "manifest"]),
+    ...docs("errors and warnings", ["reference", "diagnostics"]),
+    { label: "playground", href: "/playground" },
   ];
   const project: L[] = [
     { label: "github ↗", href: REPO_URL() },
     { label: "discord ↗", href: DISCORD_URL },
-    { label: "community", href: "/community" },
-    { label: "roadmap", href: "/roadmap" },
     { label: "changelog", href: "/changelog" },
+    { label: "blog", href: "/blog" },
     { label: "showcase", href: "/showcase" },
     { label: "badge", href: "/badge" },
   ];

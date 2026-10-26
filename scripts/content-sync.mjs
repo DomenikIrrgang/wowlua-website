@@ -22,7 +22,7 @@ import { pipeline } from "node:stream/promises";
 import * as tar from "tar";
 
 // What the site renders from each ref. Everything else in the repo is skipped.
-export const WANTED = ["README.md", "CHANGELOG.md", "docs/", "spec/", "examples/"];
+export const WANTED = ["README.md", "CHANGELOG.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "docs/", "spec/", "examples/"];
 const wanted = (p) => WANTED.some((w) => (w.endsWith("/") ? p.startsWith(w) : p === w));
 
 /**

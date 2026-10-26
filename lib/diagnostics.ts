@@ -1,9 +1,8 @@
 // Diagnostic codes from spec/appendix/diagnostics.md, the file wowlua's own
-// code table is generated from. Each code gets a page on main, with the spec
-// sections that mention it.
-import GithubSlugger from "github-slugger";
+// code table is generated from, and their explanations from
+// docs/reference/diagnostics.json. Each code gets a page on main.
 import { cache } from "react";
-import { docsHref, pages, readRepoFile, slugForRepoPath } from "./content";
+import { readRepoFile } from "./content";
 
 export type Diagnostic = {
   code: string;
@@ -12,8 +11,6 @@ export type Diagnostic = {
   section: string;
   area: string | null;
 };
-
-export type Mention = { title: string; href: string; heading: string };
 
 const APPENDIX = "spec/appendix/diagnostics.md";
 
@@ -70,36 +67,23 @@ export const findDiagnostic = (version: string, code: string) =>
 /** Code pages exist for main; other versions have only the appendix. */
 export function diagnosticHref(version: string, code: string): string | null {
   if (version !== "main") return null;
-  return findDiagnostic(version, code) ? `/docs/diagnostics/${code}` : null;
+  return findDiagnostic(version, code) ? `/docs/reference/diagnostics/${code}` : null;
 }
 
-/** Spec sections (outside the appendix) that mention a code. */
-export const mentions = cache((version: string, code: string): Mention[] => {
-  const out: Mention[] = [];
-  for (const p of pages(version)) {
-    if (p.repoPath === APPENDIX || !p.repoPath.startsWith("spec/")) continue;
-    const md = readRepoFile(version, p.repoPath);
-    if (!md || !md.includes(code)) continue;
-    const slugger = new GithubSlugger();
-    let title = p.repoPath;
-    let heading = { text: "", id: "" };
-    let inFence = false;
-    for (const line of md.split("\n")) {
-      if (line.startsWith("```")) inFence = !inFence;
-      const h = !inFence && /^(#{1,6})\s+(.+)$/.exec(line);
-      if (h) {
-        const text = h[2].replace(/`/g, "").trim();
-        const id = slugger.slug(h[2].trim().replace(/`/g, ""));
-        if (h[1].length === 1) title = text;
-        heading = { text, id: h[1].length === 1 ? "" : id };
-        continue;
-      }
-      if (new RegExp(`\\b${code}\\b`).test(line)) {
-        const slug = slugForRepoPath(p.repoPath)!;
-        const href = docsHref(version, slug) + (heading.id ? `#${heading.id}` : "");
-        if (!out.some((m) => m.href === href)) out.push({ title, href, heading: heading.text });
-      }
-    }
-  }
-  return out;
+export type ExampleFile = { path: string; lang: string; text: string };
+export type Explanation = {
+  area: string;
+  text: string;
+  /** `output`: what `wowlua check` prints for a failing example. */
+  examples: { compiles: boolean; files: ExampleFile[]; output?: string | null }[];
+  related: string[];
+};
+type Explanations = { areas: { range: string; short: string }[]; codes: Record<string, Explanation> };
+
+/** The codes' explanations and the areas' short names (docs/reference/diagnostics.json, from `cargo xtask diagnostics`). */
+export const explanations = cache((version: string): Explanations => {
+  const json = readRepoFile(version, "docs/reference/diagnostics.json");
+  return json ? (JSON.parse(json) as Explanations) : { areas: [], codes: {} };
 });
+
+export const explanationOf = (version: string, code: string): Explanation | undefined => explanations(version).codes[code.toUpperCase()];

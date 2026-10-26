@@ -30,16 +30,16 @@ const snippets = (file: string, height: number) => {
 export default function BadgePage() {
   return (
     <main className="page badge-page" id="main" style={{ maxWidth: 1008 }}>
-      <div className="page__head">
+      <header className="page__head">
         <span className="label" style={{ color: "var(--amber-ink)" }}>
           [ badge ]
         </span>
         <h1 className="display-l">Built with wowlua</h1>
-        <p>
+        <p className="body-l">
           Moved your addon to wowlua? Show it on your website, README or addon page. The badges are SVG, so they stay sharp at any size, and they link here. Then add your addon to
           the <Link href="/showcase">showcase</Link>.
         </p>
-      </div>
+      </header>
 
       <BadgePicker
         variants={VARIANTS}

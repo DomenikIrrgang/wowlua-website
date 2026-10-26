@@ -1,7 +1,8 @@
 import type { SearchEntry } from "@/components/SearchPalette";
+import { api, eventHref, functionHref, methodHref, namespaceHref, widgetHref } from "@/lib/api";
 import { blogPosts } from "@/lib/blog";
 import { docsHref, sidebar } from "@/lib/content";
-import { diagnostics } from "@/lib/diagnostics";
+import { diagnosticHref, diagnostics } from "@/lib/diagnostics";
 import { renderRepoFile } from "@/lib/markdown";
 
 export const dynamic = "force-static";
@@ -10,7 +11,7 @@ export const revalidate = 60;
 
 const clean = (s: string) => s.replace(/^(Appendix [A-Z]\.|[A-Z]?\d+(\.\d+)*\.?)\s+/, "").replace(/`/g, "");
 
-/** Every page and section heading of the main docs, the diagnostic codes and the site's pages. */
+/** Every page and section heading of the main docs, the diagnostic codes, the WoW API's names and the site's pages. */
 export async function GET() {
   const out: SearchEntry[] = [];
   for (const section of sidebar("main")) {
@@ -23,14 +24,22 @@ export async function GET() {
     }
   }
   for (const d of diagnostics("main")) {
-    out.push({ t: `${d.code} ${d.summary.replace(/`/g, "")}`, u: `/docs/diagnostics/${d.code}`, g: "diagnostics", p: d.section.toLowerCase(), k: "page" });
+    out.push({ t: `${d.code} ${d.summary.replace(/`/g, "")}`, u: diagnosticHref("main", d.code)!, g: "diagnostics", p: d.section.toLowerCase(), k: "page" });
+  }
+  // The WoW API by name only (its descriptions stay on its pages), so the index stays small.
+  const a = api();
+  if (a) {
+    const g = "wow api";
+    for (const n of a.namespaces) out.push({ t: n.name || "global functions", u: namespaceHref(n.name), g, k: "ns" });
+    for (const w of a.widgets) out.push({ t: w.name, u: widgetHref(w.name), g, k: "widget" });
+    for (const f of a.functions) out.push({ t: f.name, u: functionHref(f.name), g, k: "fn" });
+    for (const e of a.events) out.push({ t: e.name, u: eventHref(e.name), g, k: "event" });
+    for (const w of a.widgets) for (const m of w.methods) out.push({ t: `${w.name}:${m.name}`, u: methodHref(w.name, m.name), g, k: "method" });
   }
   for (const p of blogPosts()) out.push({ t: p.title, u: `/blog/${p.slug}`, g: "blog", k: "page" });
   for (const [t, u] of [
     ["changelog", "/changelog"],
-    ["roadmap", "/roadmap"],
     ["playground", "/playground"],
-    ["packages", "/packages"],
     ["showcase", "/showcase"],
     ["badge", "/badge"],
     ["community", "/community"],

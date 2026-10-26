@@ -1,6 +1,6 @@
 // Releases for the changelog page: wowlua's CHANGELOG.md on main when it has
-// one (Keep a Changelog: "## [0.9.0] - 2026-10-15", "### Added"), otherwise
-// the GitHub release notes.
+// one ("## 0.12.0 (2026-10-26)" with "### New", or Keep a Changelog's
+// "## [0.9.0] - 2026-10-15" with "### Added"), otherwise the GitHub release notes.
 import { cache } from "react";
 import { readRepoFile, releases } from "./content";
 
@@ -24,7 +24,7 @@ export const changelog = cache((): { source: "changelog" | "releases"; entries: 
       const nl = part.indexOf("\n");
       const head = part.slice(0, nl).trim();
       const body = part.slice(nl + 1).replace(/^\[[^\]]+\]:\s*\S+\s*$/gm, "").trim();
-      const m = /^\[?([^\]\s]+)\]?(?:\s*-\s*(\d{4}-\d{2}-\d{2}))?/.exec(head);
+      const m = /^\[?([^\]\s]+)\]?(?:\s*(?:-\s*|\()(\d{4}-\d{2}-\d{2})\)?)?/.exec(head);
       const unreleased = /^\[?unreleased\]?/i.test(head);
       const [intro, ...subs] = body.split(/^### /m);
       entries.push({
@@ -34,8 +34,10 @@ export const changelog = cache((): { source: "changelog" | "releases"; entries: 
         sections: subs.map((s) => {
           const i = s.indexOf("\n");
           const title = s.slice(0, i).trim();
-          const kind = (KINDS.find((k) => k === title.toLowerCase()) ?? "other") as Kind;
-          return { kind, title: title.toLowerCase(), body: s.slice(i + 1).trim() };
+          // wowlua's "New" is Keep a Changelog's "Added".
+          const name = title.toLowerCase() === "new" ? "added" : title.toLowerCase();
+          const kind = (KINDS.find((k) => k === name) ?? "other") as Kind;
+          return { kind, title: name, body: s.slice(i + 1).trim() };
         }),
         url: !unreleased && m ? (tags.get(m[1])?.url ?? null) : null,
       });
