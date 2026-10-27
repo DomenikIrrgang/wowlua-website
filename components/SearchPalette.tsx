@@ -80,6 +80,15 @@ export function SearchPalette() {
     return () => void listeners.delete(show);
   }, [show]);
 
+  // `?search` opens it: the registry's header links here for the docs search.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("search")) return;
+    url.searchParams.delete("search");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    show();
+  }, [show]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;

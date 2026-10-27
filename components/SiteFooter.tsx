@@ -18,6 +18,7 @@ export function SiteFooter() {
   ];
   const reference: L[] = [
     { label: "wow api", href: "/api" },
+    { label: "registry", href: "https://registry.wowlua.dev" },
     ...docs("commands", ["guide", "commands"]),
     ...docs("wowlua.json", ["reference", "manifest"]),
     ...docs("errors and warnings", ["reference", "diagnostics"]),

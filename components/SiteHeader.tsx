@@ -8,10 +8,14 @@ import { MobileMenu } from "./MobileMenu";
 import { openSearch } from "./SearchPalette";
 import { ThemeToggle } from "./ThemeToggle";
 
+/** The registry's site: a server of its own (wowlua's crates/wowlua-registry). */
+const REGISTRY_URL = "https://registry.wowlua.dev";
+
 const NAV = [
   { label: "home", href: "/", match: (p: string) => p === "/" },
   { label: "docs", href: "/docs/guide/getting-started", match: (p: string) => p.startsWith("/docs") && !isApi(p) },
   { label: "api", href: "/api", match: isApi },
+  { label: "registry", href: REGISTRY_URL, match: () => false },
   { label: "playground", href: "/playground", match: (p: string) => p.startsWith("/playground") },
   { label: "blog", href: "/blog", match: (p: string) => p.startsWith("/blog") },
 ];
@@ -38,11 +42,17 @@ export function SiteHeader({ version, repoUrl, discordUrl }: { version: string |
         </Link>
         {version && <span className="wl-site-header__version">{version}</span>}
         <nav className="wl-site-header__nav" aria-label="Main">
-          {NAV.map((n) => (
-            <Link key={n.href} className="wl-site-header__link" href={n.href} aria-current={n.match(pathname) ? "page" : undefined}>
-              {n.label}
-            </Link>
-          ))}
+          {NAV.map((n) =>
+            n.href.startsWith("http") ? (
+              <a key={n.href} className="wl-site-header__link" href={n.href}>
+                {n.label}
+              </a>
+            ) : (
+              <Link key={n.href} className="wl-site-header__link" href={n.href} aria-current={n.match(pathname) ? "page" : undefined}>
+                {n.label}
+              </Link>
+            ),
+          )}
         </nav>
         <div className="wl-site-header__end">
           <ThemeToggle />
