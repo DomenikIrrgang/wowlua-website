@@ -1,6 +1,6 @@
 // The WoW API search as a picture: a query, its filters and four results with
-// their emulator status. The counts are camelot's in wowlua 0.12.0 (5,111
-// documented functions, 1,815 events); the rest is a mock.
+// their emulator status. The counts are camelot's in wowlua 0.13.11 (5,115
+// documented functions, 1,819 events); the rest is a mock.
 const RESULTS = [
   { name: "C_Spell.GetSpellInfo", kind: "function", text: "Returns spell info: name, icon, cast time, range and the spell's ID." },
   { name: "C_Spell.GetSpellDescription", kind: "function", text: "The spell's tooltip text, with the numbers for the current character." },
@@ -20,7 +20,7 @@ export function ApiSearchMock() {
         <span style={{ fontSize: 15 }}>spellinfo</span>
         <span className="wl-caret" aria-hidden="true" />
         <span className="caption landing-hide-s" style={{ marginLeft: "auto", color: "var(--ink-muted)" }}>
-          camelot · 5,111 functions · 1,815 events
+          camelot · 5,115 functions · 1,819 events
         </span>
       </div>
       <div className="landing-api__filters">

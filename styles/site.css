@@ -171,6 +171,7 @@ pre, .wl-term__body, .wl-code__pre, .wl-diag { overflow-x: auto; }
 .landing-tile > h3 { margin: 0; }
 .landing-tile > p { margin: 0; color: var(--ink-muted); }
 .landing-tiles { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.landing-tiles--5 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .landing-ship { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
 .landing-ship .landing-tile { padding: 24px; gap: 14px; }
 .landing-ship .wl-term__body { white-space: pre-wrap; }

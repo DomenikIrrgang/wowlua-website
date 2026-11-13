@@ -2,7 +2,7 @@ import { highlight } from "@/lib/highlight";
 
 // The hero's editor: a wowlua file with a typo, underlined, and the hover that
 // explains it. The code and the message are what `wowlua check` printed for
-// this file (0.12.0); the editor around them is a mock.
+// this file (0.12.0, the same in 0.13.11); the editor around them is a mock.
 const CODE = `import event from "wowlua:events"
 import print from "wowlua:log"
 

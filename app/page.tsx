@@ -11,7 +11,8 @@ import { adoptionChecked, bringYourAddon, debugging, installCommands, intro, qui
 
 const docsLink = (slug: string, fallback = "/docs") => (findPage("main", slug.split("/")) ? `/docs/${slug}` : fallback);
 
-// The samples below were recorded from wowlua 0.12.0 in a scratch package:
+// The samples below were recorded from wowlua 0.12.0 in a scratch package, and
+// BAGS_DIAG, SUGAR_OUT and CTA_RUN checked again with 0.13.11 (unchanged):
 // `wowlua check` printed BAGS_DIAG for BAGS_SRC, `wowlua build` emitted
 // SUGAR_OUT for SUGAR_SRC (the lines of a function body, dev profile),
 // STD_AFTER builds with LedgerDB and LedgerDBPerChar in the manifest's saved
@@ -396,7 +397,7 @@ export default function Home() {
             <code className="wl-icode">event PLAYER_LOGIN</code>, and breakpoints for taint and blocked protected actions. Right: the game&apos;s screen, live.
           </figcaption>
         </figure>
-        <ul className="landing-tiles">
+        <ul className="landing-tiles landing-tiles--5">
           <li className="landing-tile">
             <h3 className="heading-3">Errors as you type</h3>
             <p className="body-s">The language server checks your unsaved edits a moment after you stop typing, against the API of every flavor you build for.</p>
@@ -412,6 +413,12 @@ export default function Home() {
             <h3 className="heading-3">Rename and find references</h3>
             <p className="body-s">
               F2 renames a method across files and packages, or tells you why it can&apos;t. Find All References finds <code className="wl-icode">self.</code> fields too.
+            </p>
+          </li>
+          <li className="landing-tile">
+            <h3 className="heading-3">Colours, hints and fixes</h3>
+            <p className="body-s">
+              Names coloured by what they are, the inferred type after a <code className="wl-icode">local</code>, quick fixes on <code className="wl-icode">Ctrl/Cmd+.</code>, and each function&apos;s reference count above it.
             </p>
           </li>
           <li className="landing-tile">
@@ -434,14 +441,16 @@ export default function Home() {
             Test your addon without logging in
           </h2>
           <p className="body" style={{ margin: 0, color: "var(--ink-muted)" }}>
-            <code className="wl-icode">wowlua test</code> loads your addon into an emulated client: a Lua 5.1 VM with WoW&apos;s taint and secret values, the flavor&apos;s API
-            and Blizzard&apos;s own UI. Type slash commands, click buttons, spawn units, move time forward, then check what the player would see, down to a screenshot.
+            <code className="wl-icode">wowlua test</code> loads your addon into an emulated client: a Lua 5.1 VM with WoW&apos;s taint and secret values, WoW Forever&apos;s
+            API and Blizzard&apos;s own UI. Type slash commands, click buttons, spawn units, move time forward, then check what the player would see, down to a screenshot.
           </p>
           <Arrows
             items={[
               "runs anywhere, in CI too, no game client needed",
               "screenshot tests drawn with your installation's textures and fonts",
               "world profiles: a character with its gear and bags, the units around it, a party",
+              'your real character as a world profile: <code class="wl-icode">/wl snapshot</code> in the game, <code class="wl-icode">wowlua profile snapshot</code> at home',
+              'perf scenarios: <code class="wl-icode">wowlua perf run</code> fails when a change makes your addon cost more per frame than the baseline',
               "examples in your doc comments run as tests",
             ]}
           />
@@ -451,6 +460,61 @@ export default function Home() {
           <Code file="tests/window.test.wowlua" lang="wowlua" code={TEST_SRC} />
           <Terminal title="~/GoldLedger" lines={TEST_RUN} />
         </div>
+      </section>
+
+      <section className="landing-sec landing-stack" aria-labelledby="world">
+        <div className="landing-split">
+          <div className="landing-col" style={{ flex: "1 1 420px" }}>
+            <Kicker>3d world</Kicker>
+            <h2 id="world" className="display-l" style={{ margin: 0 }}>
+              Your UI over the world it runs in
+            </h2>
+          </div>
+          <p className="body" style={{ flex: "1 1 420px", minWidth: 0, margin: 0, color: "var(--ink-muted)" }}>
+            With <code className="wl-icode">--world</code>, tests and screenshots stand your character and the units on the zone&apos;s ground from your WoW installation:
+            terrain, buildings, trees and creatures, lit by the realm&apos;s time of day. Nameplates follow their units, names float over them, and{" "}
+            <code className="wl-icode">UnitPosition</code> answers the ground&apos;s height.
+          </p>
+        </div>
+        <figure style={{ margin: 0, display: "grid", gap: 10 }}>
+          <img
+            className="landing-shot"
+            src="/landing/world-northshire.webp"
+            width={1920}
+            height={1080}
+            loading="lazy"
+            alt="A screenshot drawn by wowlua screenshot --world: a level 1 character in Northshire Valley in front of the abbey, test NPCs named with their titles such as Garrick, Warrior Trainer and Clara, Cloth Armor Merchant, kobolds and a target dummy nearby, and Blizzard's UI with the minimap, unit frame, chat and action bars over the world"
+          />
+          <figcaption className="caption" style={{ color: "var(--ink-muted)" }}>
+            <code className="wl-icode">wowlua screenshot --world</code> of a test in wowlua&apos;s own <code className="wl-icode">northshire</code> profile, drawn from a WoW
+            Forever installation: no game client running.
+          </figcaption>
+        </figure>
+        <ul className="landing-tiles">
+          <li className="landing-tile">
+            <h3 className="heading-3">Lit as in the game</h3>
+            <p className="body-s">
+              The zone&apos;s sky, sun, fog and shadows at the realm&apos;s time of day. <code className="wl-icode">mock.setTimeOfDay(21, 30)</code> shows the evening.
+            </p>
+          </li>
+          <li className="landing-tile">
+            <h3 className="heading-3">Weather and water</h3>
+            <p className="body-s">
+              <code className="wl-icode">mock.setWeather(&quot;rain&quot;, 0.5)</code> makes it rain; lakes, rivers and lava move, banners, lanterns and mills turn near you.
+            </p>
+          </li>
+          <li className="landing-tile">
+            <h3 className="heading-3">Spells you can see</h3>
+            <p className="body-s">A caster&apos;s hands glow, a Fireball flies and bursts on its target, and auras glow on the unit while they are up.</p>
+          </li>
+          <li className="landing-tile">
+            <h3 className="heading-3">A world to test in</h3>
+            <p className="body-s">
+              The <code className="wl-icode">northshire</code> profile: vendors, a trainer of each class, a banker, an auctioneer, a flight master and things to fight.
+            </p>
+          </li>
+        </ul>
+        <More href={`${docsLink("guide/testing")}#running-tests`}>the 3D world in tests</More>
       </section>
 
       <section className="landing-sec landing-row" aria-labelledby="api">
@@ -506,8 +570,9 @@ export default function Home() {
             From one source folder to every addon site
           </h2>
           <p className="body" style={{ margin: 0, color: "var(--ink-muted)" }}>
-            wowlua writes the TOC file, embeds your libraries and builds a complete, installable AddOn, for any of seven game flavors: retail (
-            <code className="wl-icode">standard</code>, the default), WoW Forever, the Classic clients and Classic Era.
+            wowlua writes the TOC file, embeds your libraries and builds a complete, installable AddOn, for any of five game flavors. WoW Forever (
+            <code className="wl-icode">camelot</code>) runs in every part of wowlua today; retail (<code className="wl-icode">standard</code>, the default), Classic Era, TBC
+            Anniversary and MoP Classic are checked and built, and run in the emulator soon.
           </p>
         </div>
         <div className="landing-ship">
@@ -563,7 +628,8 @@ export default function Home() {
           </h2>
           <p className="body-s" style={{ margin: 0, flex: "1 1 420px", color: "var(--ink-muted)" }}>
             <code className="wl-icode">wowlua mcp</code> lets it start your addon in the emulated client, look at screenshots, click, type slash commands, set breakpoints and
-            profile, just like you can.
+            profile, then check, format and test its own fix, just like you can. Register it once and it works in any addon, even one without{" "}
+            <code className="wl-icode">wowlua.json</code>.
           </p>
           <More href={docsLink("guide/agents")}>how it works</More>
         </div>
